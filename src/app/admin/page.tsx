@@ -15,8 +15,17 @@ import {
   LogOut,
   ImageIcon,
   Upload,
-  X
+  X,
+  FileAudio,
+  ArrowRight,
+  Heart,
+  Plus,
+  Trash2,
+  GripVertical,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
+import Link from 'next/link'
 import {
   getAllContent,
   updateContent,
@@ -24,6 +33,8 @@ import {
   updateServiceTime,
   getStaff,
   updateStaffMember,
+  deleteStaffMember,
+  addStaffMember,
   getMinistries,
   updateMinistry,
   uploadImage,
@@ -36,8 +47,9 @@ import {
   Ministry
 } from '@/lib/content'
 import { isSupabaseConfigured } from '@/lib/supabase'
+import RichTextEditor from '@/components/admin/RichTextEditor'
 
-type Tab = 'general' | 'services' | 'staff' | 'ministries' | 'scripture' | 'livestream' | 'images'
+type Tab = 'general' | 'services' | 'staff' | 'ministries' | 'scripture' | 'livestream' | 'giving' | 'images'
 
 // Simple password - in production, use proper authentication!
 const ADMIN_PASSWORD = 'vbbc2024'
@@ -150,6 +162,164 @@ function ImageUploader({
   )
 }
 
+// Staff Card Component with expand/collapse
+function StaffCard({
+  person,
+  index,
+  onChange,
+  onImageUpload,
+  onDelete,
+  isOnly
+}: {
+  person: StaffMember
+  index: number
+  onChange: (index: number, field: keyof StaffMember, value: string) => void
+  onImageUpload: (index: number, file: File) => void
+  onDelete: (index: number) => void
+  isOnly: boolean
+}) {
+  const [expanded, setExpanded] = useState(true)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  return (
+    <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+      {/* Header */}
+      <div 
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden relative flex-shrink-0">
+            {person.image_url ? (
+              <Image src={person.image_url} alt={person.name} fill className="object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                <Users size={20} />
+              </div>
+            )}
+          </div>
+          <div>
+            <h4 className="font-medium text-gray-800">{person.name || 'New Staff Member'}</h4>
+            <p className="text-sm text-gray-500">{person.role || 'No role set'}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isOnly && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                setConfirmDelete(true)
+              }}
+              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete staff member"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
+          {expanded ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+        </div>
+      </div>
+
+      {/* Delete Confirmation */}
+      {confirmDelete && (
+        <div className="p-4 bg-red-50 border-t border-red-100">
+          <p className="text-sm text-red-700 mb-3">Are you sure you want to delete {person.name || 'this staff member'}?</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onDelete(index)}
+              className="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+            >
+              Yes, Delete
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              className="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Content */}
+      {expanded && !confirmDelete && (
+        <div className="p-4 border-t border-gray-200 space-y-4">
+          {/* Photo Upload */}
+          <div className="flex items-start gap-4">
+            <div className="w-24 h-24 bg-gray-200 rounded-full overflow-hidden flex-shrink-0 relative">
+              {person.image_url ? (
+                <Image src={person.image_url} alt={person.name} fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <Users size={32} />
+                </div>
+              )}
+            </div>
+            <div>
+              <input
+                type="file"
+                id={`staff-img-${index}`}
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) onImageUpload(index, file)
+                }}
+              />
+              <label
+                htmlFor={`staff-img-${index}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-navy text-white hover:bg-navy-light transition-colors cursor-pointer text-sm"
+              >
+                <Upload size={14} />
+                Upload Photo
+              </label>
+              <p className="text-xs text-gray-500 mt-2">Square image (400x400) recommended</p>
+            </div>
+          </div>
+
+          {/* Name & Role */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <input
+                type="text"
+                value={person.name}
+                onChange={(e) => onChange(index, 'name', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                placeholder="Full name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Role/Title</label>
+              <input
+                type="text"
+                value={person.role}
+                onChange={(e) => onChange(index, 'role', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                placeholder="e.g., Senior Pastor"
+              />
+            </div>
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Biography</label>
+            <RichTextEditor
+              value={person.bio}
+              onChange={(value) => onChange(index, 'bio', value)}
+              placeholder="Write a biography for this staff member..."
+              rows={8}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
@@ -166,7 +336,6 @@ export default function AdminDashboard() {
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false)
 
   useEffect(() => {
-    // Check if already authenticated in session
     const auth = sessionStorage.getItem('vbbc_admin_auth')
     if (auth === 'true') {
       setIsAuthenticated(true)
@@ -208,8 +377,6 @@ export default function AdminDashboard() {
       setServiceTimes(serviceData)
       setStaff(staffData)
       setMinistries(ministryData)
-      
-      // Check if Supabase is configured
       setIsSupabaseConnected(isSupabaseConfigured)
     } catch (error) {
       console.error('Error loading data:', error)
@@ -237,7 +404,7 @@ export default function AdminDashboard() {
   }
 
   const handleStaffImageUpload = async (index: number, file: File) => {
-    const fileName = `staff-${index}-${Date.now()}.${file.name.split('.').pop()}`
+    const fileName = `staff-${Date.now()}.${file.name.split('.').pop()}`
     const url = await uploadImage(file, fileName)
     
     if (url) {
@@ -245,6 +412,22 @@ export default function AdminDashboard() {
         i === index ? { ...s, image_url: url } : s
       ))
     }
+  }
+
+  const handleAddStaff = () => {
+    const newStaff: StaffMember = {
+      id: `new-${Date.now()}`,
+      name: '',
+      role: '',
+      bio: '',
+      image_url: '',
+      order_index: staff.length + 1
+    }
+    setStaff(prev => [...prev, newStaff])
+  }
+
+  const handleDeleteStaff = (index: number) => {
+    setStaff(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleMinistryChange = (index: number, field: keyof Ministry, value: string) => {
@@ -258,13 +441,12 @@ export default function AdminDashboard() {
     setSaveStatus('idle')
     
     try {
-      // Save all content
       const contentPromises = Object.entries(content).map(([key, value]) => 
         updateContent(key, value)
       )
       
       const servicePromises = serviceTimes.map(st => updateServiceTime(st))
-      const staffPromises = staff.map(s => updateStaffMember(s))
+      const staffPromises = staff.map((s, i) => updateStaffMember({ ...s, order_index: i + 1 }))
       const ministryPromises = ministries.map(m => updateMinistry(m))
       
       await Promise.all([
@@ -299,21 +481,15 @@ export default function AdminDashboard() {
           
           <form onSubmit={handleLogin}>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full px-4 py-3 rounded-lg border ${
-                  passwordError ? 'border-red-500' : 'border-gray-300'
-                } focus:ring-2 focus:ring-gold focus:border-transparent`}
+                className={`w-full px-4 py-3 rounded-lg border ${passwordError ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-gold focus:border-transparent`}
                 placeholder="Enter admin password"
               />
-              {passwordError && (
-                <p className="text-red-500 text-sm mt-2">Incorrect password</p>
-              )}
+              {passwordError && <p className="text-red-500 text-sm mt-2">Incorrect password</p>}
             </div>
             
             <button
@@ -336,7 +512,24 @@ export default function AdminDashboard() {
     { id: 'ministries', label: 'Ministries', icon: <BookOpen size={20} /> },
     { id: 'scripture', label: 'Scripture', icon: <BookOpen size={20} /> },
     { id: 'livestream', label: 'Livestream', icon: <Youtube size={20} /> },
+    { id: 'giving', label: 'Giving', icon: <Heart size={20} /> },
   ]
+
+  const SermonImportCard = () => (
+    <Link 
+      href="/admin/sermons"
+      className="block bg-gradient-to-br from-navy to-navy-light rounded-xl p-6 text-white hover:shadow-lg transition-all group mt-4"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+          <FileAudio className="text-gold" size={24} />
+        </div>
+        <ArrowRight className="text-white/60 group-hover:text-gold group-hover:translate-x-1 transition-all" size={24} />
+      </div>
+      <h3 className="font-cinzel text-lg mb-2">Sermon Import</h3>
+      <p className="text-gray-300 text-sm">Bulk import sermons with AI-powered summaries</p>
+    </Link>
+  )
 
   return (
     <div className="min-h-screen bg-gray-100 pt-20">
@@ -375,9 +568,7 @@ export default function AdminDashboard() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-navy text-white'
-                      : 'text-gray-700 hover:bg-gray-50'
+                    activeTab === tab.id ? 'bg-navy text-white' : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {tab.icon}
@@ -386,33 +577,22 @@ export default function AdminDashboard() {
               ))}
             </div>
 
+            <SermonImportCard />
+
             {/* Save Button */}
             <button
               onClick={saveChanges}
               disabled={saving}
               className={`w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl font-cinzel transition-colors ${
-                saving
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gold text-navy hover:bg-gold-light'
+                saving ? 'bg-gray-400 cursor-not-allowed' : 'bg-gold text-navy hover:bg-gold-light'
               }`}
             >
-              {saving ? (
-                'Saving...'
-              ) : saveStatus === 'success' ? (
-                <>
-                  <CheckCircle size={20} />
-                  Saved!
-                </>
+              {saving ? 'Saving...' : saveStatus === 'success' ? (
+                <><CheckCircle size={20} /> Saved!</>
               ) : saveStatus === 'error' ? (
-                <>
-                  <AlertCircle size={20} />
-                  Error
-                </>
+                <><AlertCircle size={20} /> Error</>
               ) : (
-                <>
-                  <Save size={20} />
-                  Save Changes
-                </>
+                <><Save size={20} /> Save Changes</>
               )}
             </button>
           </div>
@@ -420,6 +600,7 @@ export default function AdminDashboard() {
           {/* Content Area */}
           <div className="flex-1">
             <div className="bg-white rounded-xl shadow-sm p-6">
+              
               {/* General Info Tab */}
               {activeTab === 'general' && (
                 <div className="space-y-6">
@@ -427,9 +608,7 @@ export default function AdminDashboard() {
                   
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Church Name
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Church Name</label>
                       <input
                         type="text"
                         value={content.church_name}
@@ -437,11 +616,8 @@ export default function AdminDashboard() {
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
                       />
                     </div>
-                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tagline
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Tagline</label>
                       <input
                         type="text"
                         value={content.church_tagline}
@@ -453,9 +629,7 @@ export default function AdminDashboard() {
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Street Address
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
                       <input
                         type="text"
                         value={content.church_address}
@@ -463,11 +637,8 @@ export default function AdminDashboard() {
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
                       />
                     </div>
-                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        City, State ZIP
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">City, State ZIP</label>
                       <input
                         type="text"
                         value={content.church_city}
@@ -478,9 +649,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                     <input
                       type="text"
                       value={content.church_phone}
@@ -493,9 +662,7 @@ export default function AdminDashboard() {
                   
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Facebook URL
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Facebook URL</label>
                       <input
                         type="url"
                         value={content.facebook_url}
@@ -504,11 +671,8 @@ export default function AdminDashboard() {
                         placeholder="https://facebook.com/yourpage"
                       />
                     </div>
-                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        YouTube URL
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">YouTube URL</label>
                       <input
                         type="url"
                         value={content.youtube_url}
@@ -518,6 +682,301 @@ export default function AdminDashboard() {
                       />
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Staff Tab */}
+              {activeTab === 'staff' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <h2 className="font-cinzel text-xl text-navy">Staff Members</h2>
+                    <button
+                      type="button"
+                      onClick={handleAddStaff}
+                      className="flex items-center gap-2 px-4 py-2 bg-gold text-navy rounded-lg hover:bg-gold-light transition-colors font-medium text-sm"
+                    >
+                      <Plus size={18} />
+                      Add Staff Member
+                    </button>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-blue-800 text-sm">
+                      <strong>Tip:</strong> Use the rich text editor to format biographies with <strong>bold</strong>, <em>italic</em>, lists, and links. 
+                      You can also add images directly into the bio text.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {staff.map((person, index) => (
+                      <StaffCard
+                        key={person.id}
+                        person={person}
+                        index={index}
+                        onChange={handleStaffChange}
+                        onImageUpload={handleStaffImageUpload}
+                        onDelete={handleDeleteStaff}
+                        isOnly={staff.length === 1}
+                      />
+                    ))}
+                  </div>
+
+                  {staff.length === 0 && (
+                    <div className="text-center py-12 text-gray-500">
+                      <Users size={48} className="mx-auto mb-4 text-gray-300" />
+                      <p>No staff members yet.</p>
+                      <button
+                        type="button"
+                        onClick={handleAddStaff}
+                        className="mt-4 text-gold hover:underline"
+                      >
+                        Add your first staff member
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Ministries Tab */}
+              {activeTab === 'ministries' && (
+                <div className="space-y-6">
+                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Ministries</h2>
+                  
+                  {ministries.map((ministry, index) => (
+                    <div key={ministry.id} className="p-4 bg-gray-50 rounded-lg space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Ministry Name</label>
+                        <input
+                          type="text"
+                          value={ministry.title}
+                          onChange={(e) => handleMinistryChange(index, 'title', e.target.value)}
+                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <RichTextEditor
+                          value={ministry.description}
+                          onChange={(value) => handleMinistryChange(index, 'description', value)}
+                          placeholder="Describe this ministry..."
+                          rows={4}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Scripture Tab */}
+              {activeTab === 'scripture' && (
+                <div className="space-y-6">
+                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Scripture & Verses</h2>
+                  
+                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                    <h3 className="font-semibold text-gray-700">Hero Section Verse</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Verse Text</label>
+                      <textarea
+                        rows={2}
+                        value={content.hero_verse}
+                        onChange={(e) => handleContentChange('hero_verse', e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Reference</label>
+                      <input
+                        type="text"
+                        value={content.hero_verse_ref}
+                        onChange={(e) => handleContentChange('hero_verse_ref', e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                    <h3 className="font-semibold text-gray-700">Rock Solid Section Verse</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Verse Text</label>
+                      <textarea
+                        rows={2}
+                        value={content.scripture_verse}
+                        onChange={(e) => handleContentChange('scripture_verse', e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Reference</label>
+                      <input
+                        type="text"
+                        value={content.scripture_ref}
+                        onChange={(e) => handleContentChange('scripture_ref', e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Service Times Tab */}
+              {activeTab === 'services' && (
+                <div className="space-y-6">
+                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Service Times</h2>
+                  
+                  {serviceTimes.map((service, index) => (
+                    <div key={service.id} className="grid md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Day</label>
+                        <input
+                          type="text"
+                          value={service.day}
+                          onChange={(e) => handleServiceTimeChange(index, 'day', e.target.value)}
+                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Label</label>
+                        <input
+                          type="text"
+                          value={service.label}
+                          onChange={(e) => handleServiceTimeChange(index, 'label', e.target.value)}
+                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                        <input
+                          type="text"
+                          value={service.time}
+                          onChange={(e) => handleServiceTimeChange(index, 'time', e.target.value)}
+                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Livestream Tab */}
+              {activeTab === 'livestream' && (
+                <div className="space-y-6">
+                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Livestream Settings</h2>
+                  
+                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                    <h3 className="font-semibold text-gray-700">Facebook Live</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Facebook Video/Live URL</label>
+                      <input
+                        type="url"
+                        value={content.facebook_live_url}
+                        onChange={(e) => handleContentChange('facebook_live_url', e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        placeholder="https://www.facebook.com/yourpage/videos/123456789"
+                      />
+                      <p className="text-sm text-gray-500 mt-1">Paste the URL of your Facebook Live video or page</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                    <h3 className="font-semibold text-gray-700">YouTube</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">YouTube Channel ID</label>
+                      <input
+                        type="text"
+                        value={content.youtube_channel_id}
+                        onChange={(e) => handleContentChange('youtube_channel_id', e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        placeholder="UCxxxxxxxxxxxxxxxxxx"
+                      />
+                      <p className="text-sm text-gray-500 mt-1">Find this in your YouTube channel settings under &quot;Channel ID&quot;</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Giving Tab */}
+              {activeTab === 'giving' && (
+                <div className="space-y-6">
+                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Online Giving Settings</h2>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-blue-800 text-sm">
+                      <strong>Tithe.ly Integration:</strong> To enable online giving, you&apos;ll need a Tithe.ly account. 
+                      Sign up at <a href="https://tithe.ly" target="_blank" rel="noopener noreferrer" className="underline">tithe.ly</a> and 
+                      get your Form ID from your Giving Form settings.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                    <h3 className="font-semibold text-gray-700">Enable Online Giving</h3>
+                    <div className="flex items-center gap-3">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={content.giving_enabled === 'true'}
+                          onChange={(e) => handleContentChange('giving_enabled', e.target.checked ? 'true' : 'false')}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                      </label>
+                      <span className="text-sm text-gray-700">
+                        {content.giving_enabled === 'true' ? 'Giving form is visible on the website' : 'Giving form is hidden'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                    <h3 className="font-semibold text-gray-700">Tithe.ly Configuration</h3>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tithe.ly Form ID <span className="text-gray-400">(Recommended)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={content.tithely_form_id || ''}
+                        onChange={(e) => handleContentChange('tithely_form_id', e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        placeholder="a1ca4c5d-6865-11ee-90fc-1260ab546d11"
+                      />
+                      <p className="text-sm text-gray-500 mt-1">Find this in Tithe.ly → Giving → Giving Form</p>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tithe.ly Church ID <span className="text-gray-400">(Alternative)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={content.tithely_church_id || ''}
+                        onChange={(e) => handleContentChange('tithely_church_id', e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        placeholder="123456"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                    <h3 className="font-semibold text-gray-700">Giving Page Content</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Welcome Message</label>
+                      <RichTextEditor
+                        value={content.giving_message || ''}
+                        onChange={(value) => handleContentChange('giving_message', value)}
+                        placeholder="Your generous giving supports our church ministries..."
+                        rows={4}
+                      />
+                    </div>
+                  </div>
+
+                  {content.giving_enabled === 'true' && (content.tithely_form_id || content.tithely_church_id) && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <h3 className="font-semibold text-green-800 mb-2">✓ Giving is Active</h3>
+                      <p className="text-green-700 text-sm">
+                        Your online giving form will be displayed on the <a href="/giving" target="_blank" className="underline">/giving</a> page.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -552,286 +1011,9 @@ export default function AdminDashboard() {
                     imageKey="image_rock_solid"
                     onUpload={handleImageUpload}
                   />
-
-                  <h3 className="font-cinzel text-lg text-navy border-b pb-2 pt-4">Staff Photos</h3>
-                  
-                  {staff.map((person, index) => (
-                    <div key={person.id} className="p-4 bg-gray-50 rounded-lg">
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        {person.name}
-                      </label>
-                      <div className="flex items-start gap-4">
-                        <div className="w-24 h-24 bg-gray-200 rounded-full overflow-hidden flex-shrink-0 relative">
-                          {person.image_url ? (
-                            <Image
-                              src={person.image_url}
-                              alt={person.name}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              <Users size={32} />
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <input
-                            type="file"
-                            id={`staff-image-${index}`}
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) handleStaffImageUpload(index, file)
-                            }}
-                          />
-                          <label
-                            htmlFor={`staff-image-${index}`}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-navy text-white hover:bg-navy-light transition-colors cursor-pointer"
-                          >
-                            <Upload size={16} />
-                            Upload Photo
-                          </label>
-                          <p className="text-xs text-gray-500 mt-2">
-                            Square image recommended (e.g., 400x400)
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               )}
 
-              {/* Service Times Tab */}
-              {activeTab === 'services' && (
-                <div className="space-y-6">
-                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Service Times</h2>
-                  
-                  {serviceTimes.map((service, index) => (
-                    <div key={service.id} className="grid md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Day
-                        </label>
-                        <input
-                          type="text"
-                          value={service.day}
-                          onChange={(e) => handleServiceTimeChange(index, 'day', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Label
-                        </label>
-                        <input
-                          type="text"
-                          value={service.label}
-                          onChange={(e) => handleServiceTimeChange(index, 'label', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Time
-                        </label>
-                        <input
-                          type="text"
-                          value={service.time}
-                          onChange={(e) => handleServiceTimeChange(index, 'time', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Staff Tab */}
-              {activeTab === 'staff' && (
-                <div className="space-y-6">
-                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Staff Members</h2>
-                  
-                  {staff.map((person, index) => (
-                    <div key={person.id} className="p-4 bg-gray-50 rounded-lg space-y-4">
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Name
-                          </label>
-                          <input
-                            type="text"
-                            value={person.name}
-                            onChange={(e) => handleStaffChange(index, 'name', e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Role
-                          </label>
-                          <input
-                            type="text"
-                            value={person.role}
-                            onChange={(e) => handleStaffChange(index, 'role', e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Bio
-                        </label>
-                        <textarea
-                          rows={6}
-                          value={person.bio}
-                          onChange={(e) => handleStaffChange(index, 'bio', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Ministries Tab */}
-              {activeTab === 'ministries' && (
-                <div className="space-y-6">
-                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Ministries</h2>
-                  
-                  {ministries.map((ministry, index) => (
-                    <div key={ministry.id} className="p-4 bg-gray-50 rounded-lg space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Ministry Name
-                        </label>
-                        <input
-                          type="text"
-                          value={ministry.title}
-                          onChange={(e) => handleMinistryChange(index, 'title', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Description
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={ministry.description}
-                          onChange={(e) => handleMinistryChange(index, 'description', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Scripture Tab */}
-              {activeTab === 'scripture' && (
-                <div className="space-y-6">
-                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Scripture & Verses</h2>
-                  
-                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
-                    <h3 className="font-semibold text-gray-700">Hero Section Verse</h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Verse Text
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={content.hero_verse}
-                        onChange={(e) => handleContentChange('hero_verse', e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Reference
-                      </label>
-                      <input
-                        type="text"
-                        value={content.hero_verse_ref}
-                        onChange={(e) => handleContentChange('hero_verse_ref', e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
-                    <h3 className="font-semibold text-gray-700">Rock Solid Section Verse</h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Verse Text
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={content.scripture_verse}
-                        onChange={(e) => handleContentChange('scripture_verse', e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Reference
-                      </label>
-                      <input
-                        type="text"
-                        value={content.scripture_ref}
-                        onChange={(e) => handleContentChange('scripture_ref', e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Livestream Tab */}
-              {activeTab === 'livestream' && (
-                <div className="space-y-6">
-                  <h2 className="font-cinzel text-xl text-navy border-b pb-3">Livestream Settings</h2>
-                  
-                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
-                    <h3 className="font-semibold text-gray-700">Facebook Live</h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Facebook Video/Live URL
-                      </label>
-                      <input
-                        type="url"
-                        value={content.facebook_live_url}
-                        onChange={(e) => handleContentChange('facebook_live_url', e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        placeholder="https://www.facebook.com/yourpage/videos/123456789"
-                      />
-                      <p className="text-sm text-gray-500 mt-1">
-                        Paste the URL of your Facebook Live video or page
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gray-50 rounded-lg space-y-4">
-                    <h3 className="font-semibold text-gray-700">YouTube</h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        YouTube Channel ID
-                      </label>
-                      <input
-                        type="text"
-                        value={content.youtube_channel_id}
-                        onChange={(e) => handleContentChange('youtube_channel_id', e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        placeholder="UCxxxxxxxxxxxxxxxxxx"
-                      />
-                      <p className="text-sm text-gray-500 mt-1">
-                        Find this in your YouTube channel settings under &quot;Channel ID&quot;
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

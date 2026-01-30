@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2540"/>
+      <stop offset="100%" style="stop-color:#1a3a5c"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="40%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(15,37,64,0)"/>
+      <stop offset="100%" style="stop-color:rgba(15,37,64,0.9)"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="450" fill="url(#bg)"/>
+  
+  <!-- Fire from heaven (Elijah on Mount Carmel) -->
+  <g opacity="0.15" stroke="#c9a227" stroke-width="3" fill="none">
+    <!-- Fire coming down -->
+    <path d="M400,50 Q380,100 400,130 Q420,100 400,50"/>
+    <path d="M400,130 Q360,180 400,230 Q440,180 400,130"/>
+    <path d="M400,230 Q340,300 400,350 Q460,300 400,230"/>
+  </g>
+  
+  <!-- Mountain silhouette -->
+  <g opacity="0.1" fill="#c9a227">
+    <path d="M100,400 L300,250 L400,300 L500,220 L700,400 Z"/>
+  </g>
+  
+  <!-- Ravens -->
+  <g opacity="0.12" stroke="#c9a227" stroke-width="2" fill="none">
+    <path d="M150,120 Q130,100 110,120 M150,120 Q170,100 190,120"/>
+    <path d="M600,100 Q580,80 560,100 M600,100 Q620,80 640,100"/>
+    <path d="M250,180 Q230,160 210,180 M250,180 Q270,160 290,180"/>
+  </g>
+  
+  <rect width="800" height="450" fill="url(#overlay)"/>
+  
+  <line x1="60" y1="310" x2="740" y2="310" stroke="#c9a227" stroke-width="4"/>
+  
+  <text x="400" y="365" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="#faf8f5" text-anchor="middle">THE LIFE OF</text>
+  <text x="400" y="410" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="#c9a227" text-anchor="middle">ELIJAH</text>
+  <text x="760" y="40" font-family="Georgia, serif" font-size="20" fill="rgba(201,162,39,0.8)" text-anchor="end">1 Kings 17-19</text>
+  <text x="40" y="435" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.3)">Victory Bible Baptist Church</text>
+</svg>

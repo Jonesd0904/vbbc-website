@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2540"/>
+      <stop offset="100%" style="stop-color:#1a3a5c"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="40%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(15,37,64,0)"/>
+      <stop offset="100%" style="stop-color:rgba(15,37,64,0.9)"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="450" fill="url(#bg)"/>
+  
+  <!-- Large Cross -->
+  <g opacity="0.15" stroke="#c9a227" stroke-width="35" fill="none">
+    <line x1="400" y1="50" x2="400" y2="350"/>
+    <line x1="250" y1="150" x2="550" y2="150"/>
+  </g>
+  
+  <!-- Radiating light from cross -->
+  <g opacity="0.08" stroke="#c9a227" stroke-width="2" fill="none">
+    <line x1="400" y1="150" x2="200" y2="50"/>
+    <line x1="400" y1="150" x2="600" y2="50"/>
+    <line x1="400" y1="150" x2="150" y2="150"/>
+    <line x1="400" y1="150" x2="650" y2="150"/>
+    <line x1="400" y1="150" x2="200" y2="280"/>
+    <line x1="400" y1="150" x2="600" y2="280"/>
+  </g>
+  
+  <rect width="800" height="450" fill="url(#overlay)"/>
+  
+  <line x1="60" y1="310" x2="740" y2="310" stroke="#c9a227" stroke-width="4"/>
+  
+  <text x="400" y="365" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="#faf8f5" text-anchor="middle">THE TRUTH ABOUT</text>
+  <text x="400" y="405" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="#c9a227" text-anchor="middle">SALVATION</text>
+  <text x="40" y="435" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.3)">Victory Bible Baptist Church</text>
+</svg>

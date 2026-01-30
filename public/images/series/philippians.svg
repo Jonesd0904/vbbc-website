@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2540"/>
+      <stop offset="100%" style="stop-color:#1a3a5c"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="40%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(15,37,64,0)"/>
+      <stop offset="100%" style="stop-color:rgba(15,37,64,0.9)"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="450" fill="url(#bg)"/>
+  
+  <!-- Celebration/Joy starburst -->
+  <g opacity="0.12" stroke="#c9a227" stroke-width="2" fill="none">
+    <line x1="400" y1="180" x2="400" y2="60"/>
+    <line x1="400" y1="180" x2="480" y2="80"/>
+    <line x1="400" y1="180" x2="320" y2="80"/>
+    <line x1="400" y1="180" x2="530" y2="130"/>
+    <line x1="400" y1="180" x2="270" y2="130"/>
+    <line x1="400" y1="180" x2="550" y2="200"/>
+    <line x1="400" y1="180" x2="250" y2="200"/>
+    <line x1="400" y1="180" x2="500" y2="270"/>
+    <line x1="400" y1="180" x2="300" y2="270"/>
+  </g>
+  
+  <!-- Stars/sparkles -->
+  <g opacity="0.15" fill="#c9a227">
+    <circle cx="400" cy="60" r="6"/>
+    <circle cx="480" cy="80" r="5"/>
+    <circle cx="320" cy="80" r="5"/>
+    <circle cx="530" cy="130" r="4"/>
+    <circle cx="270" cy="130" r="4"/>
+    <circle cx="550" cy="200" r="5"/>
+    <circle cx="250" cy="200" r="5"/>
+    <circle cx="500" cy="270" r="4"/>
+    <circle cx="300" cy="270" r="4"/>
+    
+    <!-- Extra sparkles -->
+    <circle cx="150" cy="100" r="3"/>
+    <circle cx="650" cy="120" r="3"/>
+    <circle cx="180" cy="250" r="3"/>
+    <circle cx="620" cy="280" r="3"/>
+  </g>
+  
+  <!-- Heart symbol for joy -->
+  <g opacity="0.1" fill="#c9a227">
+    <path d="M400,220 C400,200 370,180 350,200 C330,220 330,250 400,300 C470,250 470,220 450,200 C430,180 400,200 400,220"/>
+  </g>
+  
+  <rect width="800" height="450" fill="url(#overlay)"/>
+  
+  <line x1="60" y1="310" x2="740" y2="310" stroke="#c9a227" stroke-width="4"/>
+  
+  <text x="400" y="370" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#faf8f5" text-anchor="middle">PHILIPPIANS</text>
+  <text x="400" y="410" font-family="Georgia, serif" font-size="24" font-style="italic" fill="#c9a227" text-anchor="middle">Joy in the Lord</text>
+  <text x="760" y="40" font-family="Georgia, serif" font-size="20" fill="rgba(201,162,39,0.8)" text-anchor="end">Philippians</text>
+  <text x="40" y="435" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.3)">Victory Bible Baptist Church</text>
+</svg>

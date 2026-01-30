@@ -1,38 +1,32 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Users, BookOpen, Music, Globe } from 'lucide-react'
+import { Users, BookOpen, Music, Globe, Heart, LucideIcon } from 'lucide-react'
+import { getMinistries, defaultMinistries, Ministry } from '@/lib/content'
 
-const ministries = [
-  {
-    icon: Users,
-    title: "Children's Ministry",
-    description: "Building a foundation of faith for the next generation through Bible teaching and fun activities. Our children's ministry provides age-appropriate lessons that teach biblical truths in engaging ways. We believe that children are a heritage from the Lord and we are committed to helping them grow in their knowledge and love of God.",
-  },
-  {
-    icon: Users,
-    title: "Youth Ministry",
-    description: "Equipping teens to stand firm in their faith and become leaders for Christ. Our youth ministry provides a place for teenagers to grow spiritually, build friendships with other Christian young people, and learn to apply God's Word to their daily lives. We focus on relevant Bible teaching, fellowship, and outreach opportunities.",
-  },
-  {
-    icon: BookOpen,
-    title: "Adult Bible Study",
-    description: "Deep dives into God's Word for spiritual growth and practical application. Our Sunday School classes offer verse-by-verse Bible study for adults of all ages. Whether you're a new believer or have been walking with Christ for years, there's a place for you to learn and grow in our adult education program.",
-  },
-  {
-    icon: Music,
-    title: "Music Ministry",
-    description: "Glorifying God through traditional hymns and Christ-honoring music. Our music ministry includes our church choir, special music, and congregational singing. We believe that music is a powerful tool for worship and use it to praise the Lord and encourage one another in the faith.",
-  },
-  {
-    icon: Globe,
-    title: "Outreach & Missions",
-    description: "Reaching the world with the Gospel of Jesus Christ. We are committed to the Great Commission and support missionaries both locally and around the world. Our church regularly participates in outreach events, door-to-door evangelism, and community service projects to share God's love with others.",
-  },
-]
+// Icon mapping
+const iconMap: Record<string, LucideIcon> = {
+  users: Users,
+  book: BookOpen,
+  music: Music,
+  globe: Globe,
+  heart: Heart,
+}
 
 export default function MinistriesPage() {
+  const [ministries, setMinistries] = useState<Ministry[]>(defaultMinistries)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadMinistries = async () => {
+      const data = await getMinistries()
+      setMinistries(data)
+      setIsLoading(false)
+    }
+    loadMinistries()
+  }, [])
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -46,7 +40,28 @@ export default function MinistriesPage() {
     )
     document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el))
     return () => observer.disconnect()
-  }, [])
+  }, [ministries, isLoading])
+
+  // Function to render description - handles both plain text and HTML
+  const renderDescription = (description: string) => {
+    // Check if it's HTML content (contains HTML tags)
+    if (description.includes('<') && description.includes('>')) {
+      return (
+        <div 
+          className="prose prose-gray max-w-none text-gray-600"
+          dangerouslySetInnerHTML={{ __html: description }}
+        />
+      )
+    }
+    
+    // Plain text
+    return <p className="text-gray-600 leading-relaxed">{description}</p>
+  }
+
+  // Get icon component
+  const getIcon = (iconName: string): LucideIcon => {
+    return iconMap[iconName.toLowerCase()] || Users
+  }
 
   return (
     <>
@@ -71,22 +86,42 @@ export default function MinistriesPage() {
       {/* Ministries List */}
       <section className="py-8 bg-cream">
         <div className="max-w-4xl mx-auto px-6 space-y-6">
-          {ministries.map((ministry, index) => (
-            <div 
-              key={index} 
-              className={`flex flex-col md:flex-row items-start gap-6 p-8 rounded-lg fade-in ${
-                index % 2 === 0 ? 'bg-white' : 'bg-cream-dark'
-              }`}
-            >
-              <div className="w-20 h-20 bg-navy rounded-full flex items-center justify-center flex-shrink-0">
-                <ministry.icon className="text-gold" size={36} />
-              </div>
-              <div>
-                <h2 className="font-cinzel text-2xl text-navy mb-3">{ministry.title}</h2>
-                <p className="text-gray-600 leading-relaxed">{ministry.description}</p>
-              </div>
-            </div>
-          ))}
+          {isLoading ? (
+            // Loading skeleton
+            <>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex flex-col md:flex-row items-start gap-6 p-8 rounded-lg bg-white animate-pulse">
+                  <div className="w-20 h-20 bg-gray-200 rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <div className="h-6 bg-gray-200 rounded w-1/3" />
+                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            ministries.map((ministry, index) => {
+              const IconComponent = getIcon(ministry.icon)
+              return (
+                <div 
+                  key={ministry.id || index} 
+                  className={`flex flex-col md:flex-row items-start gap-6 p-8 rounded-lg fade-in ${
+                    index % 2 === 0 ? 'bg-white' : 'bg-cream-dark'
+                  }`}
+                >
+                  <div className="w-20 h-20 bg-navy rounded-full flex items-center justify-center flex-shrink-0">
+                    <IconComponent className="text-gold" size={36} />
+                  </div>
+                  <div>
+                    <h2 className="font-cinzel text-2xl text-navy mb-3">{ministry.title}</h2>
+                    {renderDescription(ministry.description)}
+                  </div>
+                </div>
+              )
+            })
+          )}
         </div>
       </section>
 
@@ -99,6 +134,31 @@ export default function MinistriesPage() {
           </Link>
         </div>
       </section>
+
+      {/* Styles for rich text content */}
+      <style jsx global>{`
+        .prose a {
+          color: #d4af37;
+          text-decoration: underline;
+        }
+        .prose a:hover {
+          color: #b8942e;
+        }
+        .prose img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          margin: 1rem 0;
+        }
+        .prose ul, .prose ol {
+          margin-left: 1.5rem;
+          margin-top: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+        .prose li {
+          margin-bottom: 0.25rem;
+        }
+      `}</style>
     </>
   )
 }

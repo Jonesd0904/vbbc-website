@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2540"/>
+      <stop offset="100%" style="stop-color:#1a3a5c"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="40%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(15,37,64,0)"/>
+      <stop offset="100%" style="stop-color:rgba(15,37,64,0.9)"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="450" fill="url(#bg)"/>
+  
+  <!-- Growth arrows pointing up -->
+  <g opacity="0.12" stroke="#c9a227" stroke-width="3" fill="none">
+    <line x1="150" y1="350" x2="150" y2="200"/>
+    <path d="M130,220 L150,200 L170,220"/>
+    
+    <line x1="280" y1="350" x2="280" y2="150"/>
+    <path d="M260,170 L280,150 L300,170"/>
+    
+    <line x1="410" y1="350" x2="410" y2="100"/>
+    <path d="M390,120 L410,100 L430,120"/>
+    
+    <line x1="540" y1="350" x2="540" y2="130"/>
+    <path d="M520,150 L540,130 L560,150"/>
+    
+    <line x1="670" y1="350" x2="670" y2="180"/>
+    <path d="M650,200 L670,180 L690,200"/>
+  </g>
+  
+  <!-- Seed/plant growing -->
+  <g opacity="0.1" fill="#c9a227">
+    <ellipse cx="400" cy="280" rx="30" ry="15"/>
+    <path d="M400,265 Q380,230 400,200 Q420,230 400,265"/>
+  </g>
+  
+  <rect width="800" height="450" fill="url(#overlay)"/>
+  
+  <line x1="60" y1="310" x2="740" y2="310" stroke="#c9a227" stroke-width="4"/>
+  
+  <text x="400" y="370" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#faf8f5" text-anchor="middle">SECOND PETER</text>
+  <text x="400" y="410" font-family="Georgia, serif" font-size="24" font-style="italic" fill="#c9a227" text-anchor="middle">Growing in Grace &amp; Knowledge</text>
+  <text x="760" y="40" font-family="Georgia, serif" font-size="20" fill="rgba(201,162,39,0.8)" text-anchor="end">2 Peter</text>
+  <text x="40" y="435" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.3)">Victory Bible Baptist Church</text>
+</svg>

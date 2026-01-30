@@ -65,6 +65,12 @@ export const defaultContent: Record<string, string> = {
   'facebook_live_url': '',
   'youtube_channel_id': '',
   
+  // Tithe.ly Giving
+  'giving_enabled': 'false',
+  'tithely_church_id': '',
+  'tithely_form_id': '',
+  'giving_message': 'Your generous giving supports our church ministries, missions, and community outreach. Thank you for partnering with us to share the love of Christ.',
+  
   // Images
   'image_logo': '/images/logo.png',
   'image_church_building': '/images/church-building.jpg',
@@ -266,9 +272,56 @@ export async function updateStaffMember(staff: StaffMember): Promise<boolean> {
   }
   
   try {
+    // If it's a new staff member (id starts with 'new-'), insert without the id
+    if (staff.id.startsWith('new-')) {
+      const { id, ...staffWithoutId } = staff
+      const { error } = await supabase
+        .from('staff')
+        .insert(staffWithoutId)
+      return !error
+    }
+    
     const { error } = await supabase
       .from('staff')
       .upsert(staff)
+    
+    return !error
+  } catch {
+    return false
+  }
+}
+
+export async function addStaffMember(staff: Omit<StaffMember, 'id'>): Promise<StaffMember | null> {
+  if (!isSupabaseConfigured || !supabase) {
+    return null
+  }
+  
+  try {
+    const { data, error } = await supabase
+      .from('staff')
+      .insert(staff)
+      .select()
+      .single()
+    
+    if (error || !data) {
+      return null
+    }
+    return data
+  } catch {
+    return null
+  }
+}
+
+export async function deleteStaffMember(id: string): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) {
+    return false
+  }
+  
+  try {
+    const { error } = await supabase
+      .from('staff')
+      .delete()
+      .eq('id', id)
     
     return !error
   } catch {

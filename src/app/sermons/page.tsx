@@ -2,43 +2,56 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Search, Calendar, User, BookOpen, Play, Headphones, Youtube } from 'lucide-react'
+import Image from 'next/image'
+import { Search, Calendar, User, BookOpen, Play, Headphones, Youtube, FolderOpen, X } from 'lucide-react'
 import { supabase, isSupabaseConfigured, Sermon } from '@/lib/supabase'
+import { getSermonSeries, SermonSeries } from '@/lib/sermons'
 
 // Sample sermons for when Supabase is not connected
 const sampleSermons: Sermon[] = [
   {
     id: '1',
-    title: 'The Victory of Faith',
+    title: 'Rock Solid',
     speaker: 'Pastor John Seydlitz',
     date: '2024-01-28',
-    series: 'Living Victoriously',
-    scripture: '1 Corinthians 15:57',
+    series: 'Rock Solid',
+    scripture: 'Deuteronomy 32:31-33',
     description: 'Discover how faith in Christ gives us victory over sin, death, and the challenges of life.',
     youtube_url: 'https://youtube.com/watch?v=example1',
     created_at: '2024-01-28',
   },
   {
     id: '2',
-    title: 'Walking in the Spirit',
+    title: 'Why Serve the Rock?',
     speaker: 'Pastor John Seydlitz',
     date: '2024-01-21',
-    series: 'Living Victoriously',
-    scripture: 'Galatians 5:16-25',
+    series: 'Rock Solid',
+    scripture: 'Deuteronomy 31 & 32',
     description: 'Learn what it means to walk in the Spirit and live a life pleasing to God.',
     youtube_url: 'https://youtube.com/watch?v=example2',
     created_at: '2024-01-21',
   },
   {
     id: '3',
-    title: 'The Faithfulness of God',
+    title: 'A Rock Solid Life Has the Right Foundation',
     speaker: 'Dr. Chris Shepler',
     date: '2024-01-14',
-    series: 'Foundations of Faith',
-    scripture: 'Lamentations 3:22-23',
-    description: "God's mercies are new every morning. Great is His faithfulness!",
+    series: 'Rock Solid',
+    scripture: 'Matthew 7:24-27',
+    description: "Building your life on the solid foundation of God's Word.",
     youtube_url: 'https://youtube.com/watch?v=example3',
     created_at: '2024-01-14',
+  },
+  {
+    id: '4',
+    title: 'The Birth of Jesus',
+    speaker: 'Pastor John Seydlitz',
+    date: '2023-12-24',
+    series: 'Stand-Alone Messages',
+    scripture: 'Luke 2:1-7',
+    description: "The story of our Savior's birth.",
+    youtube_url: 'https://youtube.com/watch?v=example4',
+    created_at: '2023-12-24',
   },
 ]
 
@@ -48,13 +61,63 @@ function extractYouTubeId(url: string): string | null {
   return match ? match[1] : null
 }
 
+// Series Card Component
+function SeriesCard({ 
+  series, 
+  isSelected, 
+  onClick,
+  sermonCount 
+}: { 
+  series: SermonSeries
+  isSelected: boolean
+  onClick: () => void
+  sermonCount: number
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative overflow-hidden rounded-xl transition-all ${
+        isSelected 
+          ? 'ring-2 ring-gold ring-offset-2 shadow-lg' 
+          : 'hover:shadow-md hover:scale-[1.02]'
+      }`}
+    >
+      <div className="aspect-video bg-navy relative">
+        {series.image_url ? (
+          <Image
+            src={series.image_url}
+            alt={series.name}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-navy to-navy-dark">
+            <FolderOpen className="text-gold" size={32} />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+          <h3 className="font-cinzel text-sm font-semibold line-clamp-1">{series.name}</h3>
+          {series.scripture_ref && (
+            <p className="text-gold text-xs">{series.scripture_ref}</p>
+          )}
+          <p className="text-gray-300 text-xs mt-1">{sermonCount} sermon{sermonCount !== 1 ? 's' : ''}</p>
+        </div>
+      </div>
+    </button>
+  )
+}
+
 export default function SermonsPage() {
   const [sermons, setSermons] = useState<Sermon[]>(sampleSermons)
+  const [series, setSeries] = useState<SermonSeries[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSpeaker, setSelectedSpeaker] = useState('')
+  const [selectedSeries, setSelectedSeries] = useState('')
   const [speakers, setSpeakers] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false)
+  const [showSeriesGrid, setShowSeriesGrid] = useState(true)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -72,7 +135,12 @@ export default function SermonsPage() {
   }, [sermons])
 
   useEffect(() => {
-    async function fetchSermons() {
+    async function fetchData() {
+      // Fetch sermon series
+      const seriesData = await getSermonSeries()
+      setSeries(seriesData)
+
+      // Fetch sermons
       if (!isSupabaseConfigured || !supabase) {
         console.log('Using sample sermons (Supabase not configured)')
         setSermons(sampleSermons)
@@ -109,8 +177,16 @@ export default function SermonsPage() {
       setLoading(false)
     }
 
-    fetchSermons()
+    fetchData()
   }, [])
+
+  // Get sermon count per series
+  const getSermonCountForSeries = (seriesName: string) => {
+    return sermons.filter(s => s.series === seriesName).length
+  }
+
+  // Filter series to only show those with sermons
+  const seriesWithSermons = series.filter(s => getSermonCountForSeries(s.name) > 0)
 
   const filteredSermons = sermons.filter((sermon) => {
     const matchesSearch = searchQuery === '' || 
@@ -120,9 +196,27 @@ export default function SermonsPage() {
       (sermon.scripture && sermon.scripture.toLowerCase().includes(searchQuery.toLowerCase()))
     
     const matchesSpeaker = selectedSpeaker === '' || sermon.speaker === selectedSpeaker
+    const matchesSeries = selectedSeries === '' || sermon.series === selectedSeries
 
-    return matchesSearch && matchesSpeaker
+    return matchesSearch && matchesSpeaker && matchesSeries
   })
+
+  const handleSeriesClick = (seriesName: string) => {
+    if (selectedSeries === seriesName) {
+      setSelectedSeries('')
+    } else {
+      setSelectedSeries(seriesName)
+      setShowSeriesGrid(false)
+    }
+  }
+
+  const clearSeriesFilter = () => {
+    setSelectedSeries('')
+    setShowSeriesGrid(true)
+  }
+
+  // Get selected series info
+  const selectedSeriesInfo = series.find(s => s.name === selectedSeries)
 
   return (
     <>
@@ -133,6 +227,63 @@ export default function SermonsPage() {
           <h1 className="font-cinzel text-4xl md:text-6xl text-white font-semibold">Sermon Archive</h1>
         </div>
       </section>
+
+      {/* Series Grid */}
+      {showSeriesGrid && seriesWithSermons.length > 0 && (
+        <section className="py-12 bg-cream">
+          <div className="container-wide">
+            <h2 className="font-cinzel text-2xl text-navy mb-6 text-center">Browse by Series</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {seriesWithSermons.map((s) => (
+                <SeriesCard
+                  key={s.id}
+                  series={s}
+                  isSelected={selectedSeries === s.name}
+                  onClick={() => handleSeriesClick(s.name)}
+                  sermonCount={getSermonCountForSeries(s.name)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Selected Series Header */}
+      {selectedSeries && selectedSeriesInfo && (
+        <section className="bg-navy text-white py-8">
+          <div className="container-wide">
+            <div className="flex items-center gap-6">
+              {selectedSeriesInfo.image_url && (
+                <div className="w-32 h-20 rounded-lg overflow-hidden relative flex-shrink-0 hidden md:block">
+                  <Image
+                    src={selectedSeriesInfo.image_url}
+                    alt={selectedSeriesInfo.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="text-gold text-sm mb-1">Sermon Series</p>
+                <h2 className="font-cinzel text-2xl">{selectedSeriesInfo.name}</h2>
+                {selectedSeriesInfo.scripture_ref && (
+                  <p className="text-gray-300 text-sm mt-1">{selectedSeriesInfo.scripture_ref}</p>
+                )}
+                {selectedSeriesInfo.description && (
+                  <p className="text-gray-400 text-sm mt-2 line-clamp-2">{selectedSeriesInfo.description}</p>
+                )}
+              </div>
+              <button
+                onClick={clearSeriesFilter}
+                className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+              >
+                <X size={18} />
+                Clear Filter
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Search & Filter */}
       <section className="py-8 bg-cream border-b border-gray-200">
@@ -161,6 +312,34 @@ export default function SermonsPage() {
                 <option key={speaker} value={speaker}>{speaker}</option>
               ))}
             </select>
+
+            {/* Series Filter (dropdown for mobile) */}
+            <select
+              value={selectedSeries}
+              onChange={(e) => {
+                setSelectedSeries(e.target.value)
+                setShowSeriesGrid(e.target.value === '')
+              }}
+              className="px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent bg-white"
+            >
+              <option value="">All Series</option>
+              {series.map((s) => (
+                <option key={s.id} value={s.name}>{s.name}</option>
+              ))}
+            </select>
+
+            {/* Show All Button */}
+            {!showSeriesGrid && (
+              <button
+                onClick={() => {
+                  setShowSeriesGrid(true)
+                  setSelectedSeries('')
+                }}
+                className="px-4 py-3 bg-navy text-white rounded-lg hover:bg-navy-light transition-colors"
+              >
+                Show All Series
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -229,7 +408,12 @@ export default function SermonsPage() {
                       <h3 className="font-cinzel text-xl text-navy mb-2">{sermon.title}</h3>
                       
                       {sermon.series && (
-                        <p className="text-gold text-sm mb-2">Series: {sermon.series}</p>
+                        <button 
+                          onClick={() => handleSeriesClick(sermon.series!)}
+                          className="text-gold text-sm mb-2 hover:underline"
+                        >
+                          Series: {sermon.series}
+                        </button>
                       )}
 
                       {sermon.description && (

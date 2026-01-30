@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2540"/>
+      <stop offset="100%" style="stop-color:#1a3a5c"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="40%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(15,37,64,0)"/>
+      <stop offset="100%" style="stop-color:rgba(15,37,64,0.9)"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg)"/>
+  
+  <!-- Rock/Mountain Pattern -->
+  <g opacity="0.15" stroke="#c9a227" stroke-width="2" fill="none">
+    <path d="M0,450 L80,300 L160,450"/>
+    <path d="M160,450 L240,280 L320,450"/>
+    <path d="M320,450 L400,250 L480,450"/>
+    <path d="M480,450 L560,290 L640,450"/>
+    <path d="M640,450 L720,270 L800,450"/>
+  </g>
+  
+  <!-- Large Rock silhouette -->
+  <g opacity="0.1" fill="#c9a227">
+    <path d="M200,450 Q250,350 300,380 Q350,300 400,320 Q450,250 500,280 Q550,320 600,300 L650,450 Z"/>
+  </g>
+  
+  <!-- Overlay -->
+  <rect width="800" height="450" fill="url(#overlay)"/>
+  
+  <!-- Gold accent line -->
+  <line x1="60" y1="310" x2="740" y2="310" stroke="#c9a227" stroke-width="4"/>
+  
+  <!-- Series Title -->
+  <text x="400" y="370" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#faf8f5" text-anchor="middle">ROCK SOLID</text>
+  
+  <!-- Tagline -->
+  <text x="400" y="410" font-family="Georgia, serif" font-size="24" font-style="italic" fill="#c9a227" text-anchor="middle">For their rock is not as our Rock</text>
+  
+  <!-- Scripture -->
+  <text x="760" y="40" font-family="Georgia, serif" font-size="20" fill="rgba(201,162,39,0.8)" text-anchor="end">Deuteronomy 32:31</text>
+  
+  <!-- Watermark -->
+  <text x="40" y="435" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.3)">Victory Bible Baptist Church</text>
+</svg>

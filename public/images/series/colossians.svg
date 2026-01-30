@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2540"/>
+      <stop offset="100%" style="stop-color:#1a3a5c"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="40%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(15,37,64,0)"/>
+      <stop offset="100%" style="stop-color:rgba(15,37,64,0.9)"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="450" fill="url(#bg)"/>
+  
+  <!-- Crown (Christ's preeminence) -->
+  <g opacity="0.15" stroke="#c9a227" stroke-width="4" fill="none">
+    <path d="M250,220 L250,160 L300,200 L350,130 L400,180 L450,130 L500,200 L550,160 L550,220 Z"/>
+    <line x1="250" y1="220" x2="550" y2="220"/>
+    <circle cx="300" cy="160" r="8"/>
+    <circle cx="400" cy="130" r="10"/>
+    <circle cx="500" cy="160" r="8"/>
+  </g>
+  
+  <!-- Radiating glory -->
+  <g opacity="0.08" stroke="#c9a227" stroke-width="2" fill="none">
+    <line x1="400" y1="175" x2="400" y2="60"/>
+    <line x1="400" y1="175" x2="300" y2="80"/>
+    <line x1="400" y1="175" x2="500" y2="80"/>
+    <line x1="400" y1="175" x2="220" y2="130"/>
+    <line x1="400" y1="175" x2="580" y2="130"/>
+  </g>
+  
+  <rect width="800" height="450" fill="url(#overlay)"/>
+  
+  <line x1="60" y1="310" x2="740" y2="310" stroke="#c9a227" stroke-width="4"/>
+  
+  <text x="400" y="370" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#faf8f5" text-anchor="middle">COLOSSIANS</text>
+  <text x="400" y="410" font-family="Georgia, serif" font-size="24" font-style="italic" fill="#c9a227" text-anchor="middle">Christ the Preeminent One</text>
+  <text x="760" y="40" font-family="Georgia, serif" font-size="20" fill="rgba(201,162,39,0.8)" text-anchor="end">Colossians</text>
+  <text x="40" y="435" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.3)">Victory Bible Baptist Church</text>
+</svg>

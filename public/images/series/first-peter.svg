@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2540"/>
+      <stop offset="100%" style="stop-color:#1a3a5c"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="40%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(15,37,64,0)"/>
+      <stop offset="100%" style="stop-color:rgba(15,37,64,0.9)"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="450" fill="url(#bg)"/>
+  
+  <!-- Anchor (symbol of hope) -->
+  <g opacity="0.15" stroke="#c9a227" stroke-width="6" fill="none">
+    <circle cx="400" cy="100" r="35"/>
+    <line x1="400" y1="135" x2="400" y2="320"/>
+    <path d="M300,280 Q400,350 500,280"/>
+    <line x1="320" y1="300" x2="300" y2="280"/>
+    <line x1="480" y1="300" x2="500" y2="280"/>
+  </g>
+  
+  <!-- Waves at bottom -->
+  <g opacity="0.1" stroke="#c9a227" stroke-width="2" fill="none">
+    <path d="M0,380 Q50,360 100,380 Q150,400 200,380 Q250,360 300,380 Q350,400 400,380 Q450,360 500,380 Q550,400 600,380 Q650,360 700,380 Q750,400 800,380"/>
+    <path d="M0,400 Q50,380 100,400 Q150,420 200,400 Q250,380 300,400 Q350,420 400,400 Q450,380 500,400 Q550,420 600,400 Q650,380 700,400 Q750,420 800,400"/>
+  </g>
+  
+  <rect width="800" height="450" fill="url(#overlay)"/>
+  
+  <line x1="60" y1="310" x2="740" y2="310" stroke="#c9a227" stroke-width="4"/>
+  
+  <text x="400" y="370" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#faf8f5" text-anchor="middle">FIRST PETER</text>
+  <text x="400" y="410" font-family="Georgia, serif" font-size="24" font-style="italic" fill="#c9a227" text-anchor="middle">Hope in the Midst of Trials</text>
+  <text x="760" y="40" font-family="Georgia, serif" font-size="20" fill="rgba(201,162,39,0.8)" text-anchor="end">1 Peter</text>
+  <text x="40" y="435" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.3)">Victory Bible Baptist Church</text>
+</svg>
