@@ -142,6 +142,7 @@ function AudioSourceSelector({
   sermonTitle: string
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const externalLinkInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadedFileName, setUploadedFileName] = useState('')
   const [progress, setProgress] = useState(0)
@@ -376,16 +377,65 @@ function AudioSourceSelector({
       {/* External Link Input */}
       {audioSourceType === 'external_link' && (
         <div>
-          <div className="relative">
-            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={18} />
-            <input
-              type="url"
-              value={audioUrl}
-              onChange={(e) => onAudioUrlChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm"
-              placeholder="https://example.com/sermon-audio.mp3"
-            />
-          </div>
+          {audioUrl ? (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <LinkIcon className="text-blue-600 flex-shrink-0" size={20} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-blue-800">External Link Added</p>
+                  <p className="text-xs text-blue-600 truncate">{audioUrl}</p>
+                </div>
+                <a
+                  href={audioUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                  title="Test link"
+                >
+                  <ExternalLink size={16} />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => onAudioUrlChange('')}
+                  className="text-blue-600 hover:text-blue-800 flex-shrink-0"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={18} />
+                <input
+                  type="url"
+                  ref={externalLinkInputRef}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm"
+                  placeholder="https://example.com/sermon-audio.mp3"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      const input = e.target as HTMLInputElement
+                      if (input.value) {
+                        onAudioUrlChange(input.value)
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (externalLinkInputRef.current?.value) {
+                    onAudioUrlChange(externalLinkInputRef.current.value)
+                  }
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+              >
+                Use Link
+              </button>
+            </div>
+          )}
           <p className="text-xs text-gray-500 mt-1">
             Direct link to audio file or streaming page (e.g., SermonAudio, Dropbox, Google Drive)
           </p>
