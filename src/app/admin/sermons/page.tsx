@@ -45,6 +45,7 @@ import {
 } from '@/lib/sermons'
 import { isSupabaseConfigured, supabase, Sermon } from '@/lib/supabase'
 import { compressAudio, needsCompression, formatFileSize } from '@/lib/audioCompression'
+import * as musicMetadata from 'music-metadata-browser'
 
 type Tab = 'import' | 'series' | 'manage'
 type AudioSourceType = 'youtube' | 'mp3_upload' | 'external_link'
@@ -515,6 +516,466 @@ function BulkImportPanel({
                 <Plus size={18} />
                 Import {parsedSermons.length} Sermon{parsedSermons.length !== 1 ? 's' : ''}
               </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Batch Audio Upload Component
+interface AudioFileItem {
+  id: string
+  file: File
+  title: string
+  speaker: string
+  date: string
+  scripture: string
+  status: 'pending' | 'reading' | 'compressing' | 'uploading' | 'generating' | 'saving' | 'complete' | 'error'
+  progress: number
+  statusText: string
+  audioUrl?: string
+  description?: string
+  error?: string
+}
+
+function BatchAudioUpload({
+  onComplete,
+}: {
+  onComplete: () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [files, setFiles] = useState<AudioFileItem[]>([])
+  const [speaker, setSpeaker] = useState('Pastor John Seydlitz')
+  const [processing, setProcessing] = useState(false)
+  const [currentIndex, setCurrentIndex] = useState(-1)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Read metadata from audio file
+  const readMetadata = async (file: File): Promise<{ title: string; date: string; artist: string }> => {
+    try {
+      const metadata = await musicMetadata.parseBlob(file)
+      const common = metadata.common
+      
+      // Try to get date from various tags
+      let date = ''
+      if (common.year) {
+        date = `${common.year}-01-01`
+      }
+      if (common.date) {
+        // Try to parse the date
+        const parsed = new Date(common.date)
+        if (!isNaN(parsed.getTime())) {
+          date = parsed.toISOString().split('T')[0]
+        }
+      }
+      
+      return {
+        title: common.title || file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
+        date: date || new Date().toISOString().split('T')[0],
+        artist: common.artist || '',
+      }
+    } catch (error) {
+      console.error('Error reading metadata:', error)
+      // Fallback: use filename
+      return {
+        title: file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
+        date: new Date().toISOString().split('T')[0],
+        artist: '',
+      }
+    }
+  }
+
+  // Handle file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || [])
+    if (selectedFiles.length === 0) return
+    
+    // Limit to 10 files
+    const filesToProcess = selectedFiles.slice(0, 10)
+    
+    const newFiles: AudioFileItem[] = []
+    
+    for (const file of filesToProcess) {
+      const metadata = await readMetadata(file)
+      newFiles.push({
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        file,
+        title: metadata.title,
+        speaker: speaker,
+        date: metadata.date,
+        scripture: '',
+        status: 'pending',
+        progress: 0,
+        statusText: `Ready (${formatFileSize(file.size)})`,
+      })
+    }
+    
+    setFiles(prev => [...prev, ...newFiles])
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  // Update a specific file
+  const updateFile = (id: string, updates: Partial<AudioFileItem>) => {
+    setFiles(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f))
+  }
+
+  // Remove a file from the list
+  const removeFile = (id: string) => {
+    setFiles(prev => prev.filter(f => f.id !== id))
+  }
+
+  // Generate AI summary for a sermon
+  const generateSummary = async (title: string, scripture: string, sermonSpeaker: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/generate-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, scripture, speaker: sermonSpeaker }),
+      })
+      
+      if (!response.ok) throw new Error('Failed to generate summary')
+      
+      const data = await response.json()
+      return data.description || `${sermonSpeaker} presents "${title}" with biblical teaching and practical application.`
+    } catch (error) {
+      // Fallback description
+      return scripture
+        ? `In this message, ${sermonSpeaker} explores ${scripture}, sharing insights for spiritual growth.`
+        : `${sermonSpeaker} presents "${title}" with biblical teaching and practical application.`
+    }
+  }
+
+  // Process all files
+  const processAllFiles = async () => {
+    setProcessing(true)
+    
+    const pendingFiles = files.filter(f => f.status === 'pending')
+    
+    for (let i = 0; i < pendingFiles.length; i++) {
+      const fileItem = pendingFiles[i]
+      setCurrentIndex(i)
+      
+      try {
+        // Step 1: Reading metadata
+        updateFile(fileItem.id, { status: 'reading', progress: 10, statusText: 'Reading file metadata...' })
+        await new Promise(resolve => setTimeout(resolve, 300)) // Small delay for UI
+        
+        // Step 2: Compress if needed
+        let fileToUpload = fileItem.file
+        if (needsCompression(fileItem.file, 40)) {
+          updateFile(fileItem.id, { status: 'compressing', progress: 20, statusText: 'Compressing audio...' })
+          
+          fileToUpload = await compressAudio(fileItem.file, {
+            targetBitrate: 64,
+            mono: true,
+            onProgress: (prog, status) => {
+              updateFile(fileItem.id, { 
+                progress: 20 + Math.round(prog * 0.4), // 20-60%
+                statusText: status 
+              })
+            }
+          })
+        }
+        
+        // Step 3: Upload to Supabase
+        updateFile(fileItem.id, { status: 'uploading', progress: 65, statusText: 'Uploading to storage...' })
+        
+        const audioUrl = await uploadSermonAudio(fileToUpload, fileItem.title)
+        if (!audioUrl) {
+          throw new Error('Failed to upload audio file')
+        }
+        
+        updateFile(fileItem.id, { audioUrl, progress: 80 })
+        
+        // Step 4: Generate AI summary
+        updateFile(fileItem.id, { status: 'generating', progress: 85, statusText: 'Generating AI summary...' })
+        
+        const description = await generateSummary(fileItem.title, fileItem.scripture, fileItem.speaker)
+        updateFile(fileItem.id, { description, progress: 90 })
+        
+        // Step 5: Save to database
+        updateFile(fileItem.id, { status: 'saving', progress: 95, statusText: 'Saving to database...' })
+        
+        const sermonData: SermonWithAI = {
+          title: fileItem.title,
+          speaker: fileItem.speaker,
+          date: fileItem.date,
+          scripture: fileItem.scripture,
+          description: description,
+          audio_url: audioUrl,
+          youtube_url: '',
+        }
+        
+        await createSermon(sermonData)
+        
+        // Complete!
+        updateFile(fileItem.id, { 
+          status: 'complete', 
+          progress: 100, 
+          statusText: '✓ Saved to database!' 
+        })
+        
+      } catch (error) {
+        console.error('Error processing file:', error)
+        updateFile(fileItem.id, { 
+          status: 'error', 
+          progress: 0, 
+          statusText: 'Error processing file',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        })
+      }
+    }
+    
+    setProcessing(false)
+    setCurrentIndex(-1)
+    
+    // Refresh the sermon list
+    onComplete()
+  }
+
+  const pendingCount = files.filter(f => f.status === 'pending').length
+  const completedCount = files.filter(f => f.status === 'complete').length
+  const errorCount = files.filter(f => f.status === 'error').length
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      {/* Header */}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+            <Upload className="text-green-600" size={20} />
+          </div>
+          <div className="text-left">
+            <h3 className="font-medium text-navy">Batch Audio Upload</h3>
+            <p className="text-sm text-gray-500">Upload multiple MP3 files with automatic metadata extraction</p>
+          </div>
+        </div>
+        {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+      </button>
+
+      {/* Content */}
+      {expanded && (
+        <div className="p-4 space-y-4 border-t">
+          {/* Instructions */}
+          <div className="bg-green-50 rounded-lg p-3">
+            <p className="text-sm text-green-800 mb-2"><strong>How it works:</strong></p>
+            <ul className="text-xs text-green-700 space-y-1 list-disc list-inside">
+              <li>Select up to 10 MP3 files at once</li>
+              <li>Metadata (title, date) is read automatically from ID3 tags</li>
+              <li>Large files are compressed automatically</li>
+              <li>AI generates descriptions for each sermon</li>
+              <li>All sermons are saved directly to the database</li>
+            </ul>
+          </div>
+
+          {/* Speaker Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Default Speaker for All Uploads
+            </label>
+            <select
+              value={speaker}
+              onChange={(e) => {
+                setSpeaker(e.target.value)
+                // Update all pending files
+                setFiles(prev => prev.map(f => 
+                  f.status === 'pending' ? { ...f, speaker: e.target.value } : f
+                ))
+              }}
+              disabled={processing}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm"
+            >
+              <option value="Pastor John Seydlitz">Pastor John Seydlitz</option>
+              <option value="Dr. Chris Shepler">Dr. Chris Shepler</option>
+              <option value="Guest Speaker">Guest Speaker</option>
+            </select>
+          </div>
+
+          {/* File Input */}
+          <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept="audio/mp3,audio/mpeg,audio/wav,audio/m4a,.mp3,.wav,.m4a"
+              multiple
+              disabled={processing || files.length >= 10}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={processing || files.length >= 10}
+              className="w-full flex items-center justify-center gap-2 px-4 py-4 border-2 border-dashed border-green-300 hover:border-green-400 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileAudio size={24} className="text-green-500" />
+              <div className="text-left">
+                <span className="text-green-700 font-medium">Click to select audio files</span>
+                <span className="text-gray-500 text-sm block">MP3, WAV, M4A • Up to 10 files • {10 - files.length} slots remaining</span>
+              </div>
+            </button>
+          </div>
+
+          {/* File List */}
+          {files.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">
+                  Files ({files.length}/10)
+                  {completedCount > 0 && <span className="text-green-600 ml-2">• {completedCount} complete</span>}
+                  {errorCount > 0 && <span className="text-red-600 ml-2">• {errorCount} failed</span>}
+                </span>
+                {!processing && files.some(f => f.status === 'pending') && (
+                  <button
+                    type="button"
+                    onClick={() => setFiles([])}
+                    className="text-sm text-red-600 hover:text-red-700"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
+              
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {files.map((fileItem, index) => (
+                  <div
+                    key={fileItem.id}
+                    className={`p-3 rounded-lg border ${
+                      fileItem.status === 'complete' ? 'bg-green-50 border-green-200' :
+                      fileItem.status === 'error' ? 'bg-red-50 border-red-200' :
+                      processing && currentIndex === files.filter(f => f.status !== 'complete' && f.status !== 'error').indexOf(fileItem)
+                        ? 'bg-blue-50 border-blue-200' :
+                      'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {fileItem.status === 'complete' ? (
+                          <CheckCircle className="text-green-600" size={20} />
+                        ) : fileItem.status === 'error' ? (
+                          <AlertCircle className="text-red-600" size={20} />
+                        ) : fileItem.status !== 'pending' ? (
+                          <Loader2 className="text-blue-600 animate-spin" size={20} />
+                        ) : (
+                          <FileAudio className="text-gray-400" size={20} />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        {/* Editable Title */}
+                        <input
+                          type="text"
+                          value={fileItem.title}
+                          onChange={(e) => updateFile(fileItem.id, { title: e.target.value })}
+                          disabled={fileItem.status !== 'pending'}
+                          className="font-medium text-navy w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-gold focus:outline-none disabled:border-transparent"
+                          placeholder="Sermon title"
+                        />
+                        
+                        <div className="flex gap-4 mt-1">
+                          {/* Date */}
+                          <input
+                            type="date"
+                            value={fileItem.date}
+                            onChange={(e) => updateFile(fileItem.id, { date: e.target.value })}
+                            disabled={fileItem.status !== 'pending'}
+                            className="text-xs text-gray-600 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-gold focus:outline-none disabled:border-transparent"
+                          />
+                          
+                          {/* Scripture */}
+                          <input
+                            type="text"
+                            value={fileItem.scripture}
+                            onChange={(e) => updateFile(fileItem.id, { scripture: e.target.value })}
+                            disabled={fileItem.status !== 'pending'}
+                            placeholder="Scripture (optional)"
+                            className="text-xs text-gold flex-1 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-gold focus:outline-none disabled:border-transparent"
+                          />
+                        </div>
+                        
+                        {/* Status */}
+                        <p className={`text-xs mt-1 ${
+                          fileItem.status === 'complete' ? 'text-green-600' :
+                          fileItem.status === 'error' ? 'text-red-600' :
+                          'text-gray-500'
+                        }`}>
+                          {fileItem.statusText}
+                        </p>
+                        
+                        {/* Progress Bar */}
+                        {fileItem.status !== 'pending' && fileItem.status !== 'complete' && fileItem.status !== 'error' && (
+                          <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                            <div 
+                              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                              style={{ width: `${fileItem.progress}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Remove Button */}
+                      {fileItem.status === 'pending' && !processing && (
+                        <button
+                          type="button"
+                          onClick={() => removeFile(fileItem.id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <X size={18} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Process Button */}
+          {pendingCount > 0 && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={processAllFiles}
+                disabled={processing}
+                className="flex items-center gap-2 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {processing ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Processing {currentIndex + 1} of {pendingCount}...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={18} />
+                    Process &amp; Save {pendingCount} Sermon{pendingCount !== 1 ? 's' : ''}
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Completion Message */}
+          {completedCount > 0 && pendingCount === 0 && !processing && (
+            <div className="p-4 bg-green-100 border border-green-300 rounded-lg">
+              <div className="flex items-center gap-2 text-green-800">
+                <CheckCircle size={20} />
+                <span className="font-medium">
+                  {completedCount} sermon{completedCount !== 1 ? 's' : ''} uploaded and saved successfully!
+                </span>
+              </div>
+              <p className="text-sm text-green-700 mt-1">
+                The sermons are now available for visitors to listen to.
+              </p>
             </div>
           )}
         </div>
@@ -1413,6 +1874,9 @@ export default function SermonImportPage() {
               onImport={handleBulkImport}
               defaultSpeaker="Pastor John Seydlitz"
             />
+
+            {/* Batch Audio Upload */}
+            <BatchAudioUpload onComplete={loadData} />
 
             {/* Info Box */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
