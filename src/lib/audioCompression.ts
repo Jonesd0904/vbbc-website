@@ -153,8 +153,20 @@ export async function compressAudio(
     
     opts.onProgress?.(95, 'Finalizing...');
     
-    // Create blob from MP3 data
-    const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+    // Create blob from MP3 data - combine all chunks into single Uint8Array
+    const totalLength = mp3Data.reduce((acc, chunk) => acc + chunk.length, 0);
+    const combined = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of mp3Data) {
+      // Create a new Uint8Array from the Int8Array data
+      const uint8Chunk = new Uint8Array(chunk.length);
+      for (let i = 0; i < chunk.length; i++) {
+        uint8Chunk[i] = chunk[i] & 0xFF;
+      }
+      combined.set(uint8Chunk, offset);
+      offset += chunk.length;
+    }
+    const blob = new Blob([combined], { type: 'audio/mp3' });
     
     // Create new file with original name but .mp3 extension
     const newFileName = file.name.replace(/\.[^/.]+$/, '') + '.mp3';
