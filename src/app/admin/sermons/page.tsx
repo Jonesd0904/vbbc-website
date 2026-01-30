@@ -45,7 +45,6 @@ import {
 } from '@/lib/sermons'
 import { isSupabaseConfigured, supabase, Sermon } from '@/lib/supabase'
 import { compressAudio, needsCompression, formatFileSize } from '@/lib/audioCompression'
-import * as musicMetadata from 'music-metadata-browser'
 
 type Tab = 'import' | 'series' | 'manage'
 type AudioSourceType = 'youtube' | 'mp3_upload' | 'external_link'
@@ -552,38 +551,41 @@ function BatchAudioUpload({
   const [currentIndex, setCurrentIndex] = useState(-1)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Read metadata from audio file
+  // Read metadata from audio file (using filename parsing)
   const readMetadata = async (file: File): Promise<{ title: string; date: string; artist: string }> => {
-    try {
-      const metadata = await musicMetadata.parseBlob(file)
-      const common = metadata.common
-      
-      // Try to get date from various tags
-      let date = ''
-      if (common.year) {
-        date = `${common.year}-01-01`
-      }
-      if (common.date) {
-        // Try to parse the date
-        const parsed = new Date(common.date)
-        if (!isNaN(parsed.getTime())) {
-          date = parsed.toISOString().split('T')[0]
-        }
-      }
-      
-      return {
-        title: common.title || file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
-        date: date || new Date().toISOString().split('T')[0],
-        artist: common.artist || '',
-      }
-    } catch (error) {
-      console.error('Error reading metadata:', error)
-      // Fallback: use filename
-      return {
-        title: file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' '),
-        date: new Date().toISOString().split('T')[0],
-        artist: '',
-      }
+    // Parse filename
+    const filename = file.name.replace(/\.[^/.]+$/, '') // Remove extension
+    
+    // Try to extract date from filename patterns like:
+    // "2024-01-15 Sermon Title" or "01-15-2024 Sermon Title"
+    let dateFromFilename = ''
+    let titleFromFilename = filename
+    
+    // Pattern: YYYY-MM-DD at start
+    const isoMatch = filename.match(/^(\d{4})-(\d{2})-(\d{2})\s*[-_]?\s*(.*)$/)
+    if (isoMatch) {
+      dateFromFilename = `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`
+      titleFromFilename = isoMatch[4] || filename
+    }
+    
+    // Pattern: MM-DD-YYYY or MM/DD/YYYY at start
+    const usMatch = filename.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})\s*[-_]?\s*(.*)$/)
+    if (!dateFromFilename && usMatch) {
+      dateFromFilename = `${usMatch[3]}-${usMatch[1].padStart(2, '0')}-${usMatch[2].padStart(2, '0')}`
+      titleFromFilename = usMatch[4] || filename
+    }
+    
+    // Clean up title
+    titleFromFilename = titleFromFilename
+      .replace(/_/g, ' ')
+      .replace(/-/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    
+    return {
+      title: titleFromFilename || 'Untitled Sermon',
+      date: dateFromFilename || new Date().toISOString().split('T')[0],
+      artist: '',
     }
   }
 
@@ -662,21 +664,22 @@ function BatchAudioUpload({
       setCurrentIndex(i)
       
       try {
-        // Step 1: Reading metadata
-        updateFile(fileItem.id, { status: 'reading', progress: 10, statusText: 'Reading file metadata...' })
-        await new Promise(resolve => setTimeout(resolve, 300)) // Small delay for UI
+        // Step 1: Preparing
+        updateFile(fileItem.id, { status: 'reading', progress: 5, statusText: 'Preparing...' })
+        await new Promise(resolve => setTimeout(resolve, 100))
         
-        // Step 2: Compress if needed
+        // Step 2: Compress if needed (over 50MB)
         let fileToUpload = fileItem.file
-        if (needsCompression(fileItem.file, 40)) {
-          updateFile(fileItem.id, { status: 'compressing', progress: 20, statusText: 'Compressing audio...' })
+        const fileSizeMB = fileItem.file.size / (1024 * 1024)
+        
+        if (fileSizeMB > 50) {
+          updateFile(fileItem.id, { status: 'compressing', progress: 10, statusText: 'Compressing audio...' })
           
           fileToUpload = await compressAudio(fileItem.file, {
             targetBitrate: 64,
-            mono: true,
             onProgress: (prog, status) => {
               updateFile(fileItem.id, { 
-                progress: 20 + Math.round(prog * 0.4), // 20-60%
+                progress: 10 + Math.round(prog * 0.4), // 10-50%
                 statusText: status 
               })
             }
@@ -684,7 +687,7 @@ function BatchAudioUpload({
         }
         
         // Step 3: Upload to Supabase
-        updateFile(fileItem.id, { status: 'uploading', progress: 65, statusText: 'Uploading to storage...' })
+        updateFile(fileItem.id, { status: 'uploading', progress: 55, statusText: 'Uploading to storage...' })
         
         const audioUrl = await uploadSermonAudio(fileToUpload, fileItem.title)
         if (!audioUrl) {
@@ -1024,50 +1027,46 @@ function AudioSourceSelector({
     setCompressedSize(0)
     setWasCompressed(false)
     setProgress(0)
-    setProgressStatus(`Selected: ${formatFileSize(file.size)}`)
+    
+    const fileSizeMB = file.size / (1024 * 1024)
 
     try {
       let fileToUpload = file
-      const willCompress = needsCompression(file, 40)
-
-      if (willCompress) {
-        setProgressStatus(`Large file detected (${formatFileSize(file.size)}) - compressing...`)
+      
+      // Compress if over 50MB
+      if (fileSizeMB > 50) {
+        setProgressStatus(`Compressing ${formatFileSize(file.size)}...`)
         
-        // Compress the audio file automatically
         fileToUpload = await compressAudio(file, {
-          targetBitrate: 64, // 64kbps is great for speech
-          mono: true,
+          targetBitrate: 64,
           onProgress: (prog, status) => {
-            setProgress(Math.round(prog * 0.8)) // Compression is 80% of progress
+            setProgress(Math.round(prog * 0.7)) // 0-70% for compression
             setProgressStatus(status)
           }
         })
         
         setCompressedSize(fileToUpload.size)
         setWasCompressed(true)
-        
-        const reduction = Math.round((1 - fileToUpload.size / file.size) * 100)
-        setProgressStatus(`Compressed: ${formatFileSize(file.size)} → ${formatFileSize(fileToUpload.size)} (${reduction}% smaller)`)
+        setProgress(70)
       } else {
         setProgress(10)
-        setProgressStatus(`File size OK (${formatFileSize(file.size)}) - uploading...`)
+        setProgressStatus(`Uploading ${formatFileSize(file.size)}...`)
       }
 
-      setProgress(85)
       setProgressStatus('Uploading to storage...')
       
       await onAudioFileUpload(fileToUpload)
       
       setProgress(100)
-      if (wasCompressed || willCompress) {
-        const finalSize = willCompress ? fileToUpload.size : file.size
-        setProgressStatus(`✓ Uploaded successfully (${formatFileSize(finalSize)})`)
+      if (fileToUpload !== file) {
+        setProgressStatus(`✓ Compressed & uploaded (${formatFileSize(fileToUpload.size)})`)
       } else {
-        setProgressStatus(`✓ Uploaded successfully`)
+        setProgressStatus(`✓ Uploaded (${formatFileSize(file.size)})`)
       }
     } catch (error) {
       console.error('Upload error:', error)
-      setProgressStatus('Error - please try again')
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      setProgressStatus(`Error: ${errorMsg}`)
       setProgress(0)
     }
 
@@ -1198,10 +1197,10 @@ function AudioSourceSelector({
               </div>
               <div className="flex justify-between items-center mt-2">
                 <p className="text-xs text-green-600">
-                  {progress < 80 
-                    ? 'Large files are automatically optimized for faster upload' 
+                  {progress < 50 
+                    ? 'Preparing upload...' 
                     : progress < 100 
-                    ? 'Uploading to Supabase storage...' 
+                    ? 'Uploading to storage...' 
                     : 'Complete!'}
                 </p>
                 <span className="text-xs font-medium text-green-700">{progress}%</span>
@@ -1885,8 +1884,8 @@ export default function SermonImportPage() {
                 or link to external audio sources like SermonAudio, Dropbox, or Google Drive.
               </p>
               <p className="text-blue-700 text-xs mt-2">
-                💡 <strong>Auto-compression:</strong> Large MP3 files (over 40MB) are automatically compressed to 64kbps mono 
-                before upload — perfect for speech content while staying under Supabase&apos;s 50MB limit.
+                💡 <strong>Large Files:</strong> Files over 50MB are automatically compressed on the server.
+                This requires FFmpeg to be installed on the server.
               </p>
             </div>
 
