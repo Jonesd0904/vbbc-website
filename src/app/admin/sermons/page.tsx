@@ -28,6 +28,8 @@ import {
   Link as LinkIcon,
   Music,
   ExternalLink,
+  FileText,
+  ClipboardPaste,
 } from 'lucide-react'
 import {
   getSermonSeries,
@@ -118,6 +120,406 @@ function AISummaryGenerator({
       )}
       {generating ? 'Generating...' : 'AI Summary'}
     </button>
+  )
+}
+
+// Bulk Import Component
+interface ParsedSermon {
+  date: string
+  title: string
+  scripture: string
+}
+
+function BulkImportPanel({
+  onImport,
+  defaultSpeaker,
+}: {
+  onImport: (sermons: SermonWithAI[]) => void
+  defaultSpeaker: string
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [inputText, setInputText] = useState('')
+  const [parsedSermons, setParsedSermons] = useState<ParsedSermon[]>([])
+  const [speaker, setSpeaker] = useState(defaultSpeaker)
+  const [parseError, setParseError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Parse date from various formats
+  const parseDate = (dateStr: string): string => {
+    // Clean up the string
+    dateStr = dateStr.trim()
+    
+    // Try various date formats
+    const formats = [
+      // MM/DD/YYYY or MM-DD-YYYY
+      /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/,
+      // YYYY-MM-DD (ISO)
+      /^(\d{4})-(\d{2})-(\d{2})$/,
+      // Month DD, YYYY
+      /^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/,
+      // DD Month YYYY
+      /^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/,
+    ]
+
+    // MM/DD/YYYY format
+    let match = dateStr.match(formats[0])
+    if (match) {
+      const [, month, day, year] = match
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+    }
+
+    // ISO format (already correct)
+    match = dateStr.match(formats[1])
+    if (match) {
+      return dateStr
+    }
+
+    // Month DD, YYYY
+    match = dateStr.match(formats[2])
+    if (match) {
+      const [, monthName, day, year] = match
+      const monthNum = getMonthNumber(monthName)
+      if (monthNum) {
+        return `${year}-${monthNum}-${day.padStart(2, '0')}`
+      }
+    }
+
+    // DD Month YYYY
+    match = dateStr.match(formats[3])
+    if (match) {
+      const [, day, monthName, year] = match
+      const monthNum = getMonthNumber(monthName)
+      if (monthNum) {
+        return `${year}-${monthNum}-${day.padStart(2, '0')}`
+      }
+    }
+
+    // Fallback: try JavaScript Date parsing
+    const parsed = new Date(dateStr)
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0]
+    }
+
+    return ''
+  }
+
+  const getMonthNumber = (monthName: string): string | null => {
+    const months: Record<string, string> = {
+      'january': '01', 'jan': '01',
+      'february': '02', 'feb': '02',
+      'march': '03', 'mar': '03',
+      'april': '04', 'apr': '04',
+      'may': '05',
+      'june': '06', 'jun': '06',
+      'july': '07', 'jul': '07',
+      'august': '08', 'aug': '08',
+      'september': '09', 'sep': '09', 'sept': '09',
+      'october': '10', 'oct': '10',
+      'november': '11', 'nov': '11',
+      'december': '12', 'dec': '12',
+    }
+    return months[monthName.toLowerCase()] || null
+  }
+
+  // Parse scripture reference from title or separate field
+  const extractScripture = (text: string): { title: string; scripture: string } => {
+    // Common scripture patterns
+    const scripturePatterns = [
+      // "Title - Scripture" or "Title | Scripture"
+      /^(.+?)\s*[-|]\s*([1-3]?\s*[A-Za-z]+\.?\s+\d+[:\-\d,\s]*)/,
+      // Scripture at end in parentheses "Title (Scripture)"
+      /^(.+?)\s*\(([1-3]?\s*[A-Za-z]+\.?\s+\d+[:\-\d,\s]*)\)$/,
+      // Scripture pattern anywhere: "Book Chapter:Verse"
+      /([1-3]?\s*[A-Za-z]+\.?\s+\d+:\d+[\-\d,]*)/,
+    ]
+
+    // Try pattern with separator
+    let match = text.match(scripturePatterns[0])
+    if (match) {
+      return { title: match[1].trim(), scripture: match[2].trim() }
+    }
+
+    // Try parentheses pattern
+    match = text.match(scripturePatterns[1])
+    if (match) {
+      return { title: match[1].trim(), scripture: match[2].trim() }
+    }
+
+    // Check if just scripture reference at end (after title)
+    match = text.match(scripturePatterns[2])
+    if (match) {
+      const scriptureRef = match[1]
+      const titlePart = text.replace(scriptureRef, '').trim().replace(/[-|]\s*$/, '').trim()
+      if (titlePart.length > 5) {
+        return { title: titlePart, scripture: scriptureRef.trim() }
+      }
+    }
+
+    return { title: text.trim(), scripture: '' }
+  }
+
+  // Parse input text (CSV or line-based)
+  const parseInput = (text: string) => {
+    setParseError('')
+    const lines = text.trim().split('\n').filter(line => line.trim())
+    
+    if (lines.length === 0) {
+      setParsedSermons([])
+      return
+    }
+
+    const results: ParsedSermon[] = []
+    
+    // Detect format: CSV (comma or tab separated) vs line-based
+    const firstLine = lines[0]
+    const isCSV = firstLine.includes(',') || firstLine.includes('\t')
+    const separator = firstLine.includes('\t') ? '\t' : ','
+
+    // Check if first line is a header
+    const headerKeywords = ['date', 'title', 'scripture', 'sermon', 'reference', 'passage']
+    const isHeader = headerKeywords.some(kw => firstLine.toLowerCase().includes(kw))
+    const startIndex = isHeader ? 1 : 0
+
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+
+      let date = ''
+      let title = ''
+      let scripture = ''
+
+      if (isCSV) {
+        // CSV format: expect Date, Title, Scripture (in various orders)
+        const parts = line.split(separator).map(p => p.trim().replace(/^"|"$/g, ''))
+        
+        if (parts.length >= 2) {
+          // Try to identify which column is what
+          for (const part of parts) {
+            const parsedDate = parseDate(part)
+            if (parsedDate && !date) {
+              date = parsedDate
+            } else if (!title && part.length > 3 && !parsedDate) {
+              // Check if it's a scripture reference
+              if (/^[1-3]?\s*[A-Za-z]+\.?\s+\d+/.test(part)) {
+                scripture = part
+              } else {
+                title = part
+              }
+            } else if (!scripture && /^[1-3]?\s*[A-Za-z]+\.?\s+\d+/.test(part)) {
+              scripture = part
+            } else if (!title && part.length > 3) {
+              title = part
+            }
+          }
+        }
+      } else {
+        // Line-based: try to extract date from beginning
+        // Format might be: "MM/DD/YYYY Title - Scripture" or "Date: Title (Scripture)"
+        const dateMatch = line.match(/^([\d\/\-]+|[A-Za-z]+\s+\d+,?\s+\d{4})\s*[:\-]?\s*/)
+        
+        if (dateMatch) {
+          date = parseDate(dateMatch[1])
+          const remainder = line.substring(dateMatch[0].length)
+          const extracted = extractScripture(remainder)
+          title = extracted.title
+          scripture = extracted.scripture
+        } else {
+          // No clear date, try to extract title and scripture
+          const extracted = extractScripture(line)
+          title = extracted.title
+          scripture = extracted.scripture
+        }
+      }
+
+      // If we found at least a title, add it
+      if (title) {
+        results.push({ date, title, scripture })
+      }
+    }
+
+    if (results.length === 0) {
+      setParseError('Could not parse any sermons from the input. Try a different format.')
+    }
+
+    setParsedSermons(results)
+  }
+
+  // Handle file upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const text = event.target?.result as string
+      setInputText(text)
+      parseInput(text)
+    }
+    reader.readAsText(file)
+  }
+
+  // Import parsed sermons
+  const handleImport = () => {
+    const sermonsToImport: SermonWithAI[] = parsedSermons.map(ps => ({
+      title: ps.title,
+      speaker: speaker,
+      date: ps.date || new Date().toISOString().split('T')[0],
+      scripture: ps.scripture,
+      series: '',
+      description: '',
+      youtube_url: '',
+      audio_url: '',
+    }))
+
+    onImport(sermonsToImport)
+    setInputText('')
+    setParsedSermons([])
+    setExpanded(false)
+  }
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      {/* Header */}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+            <ClipboardPaste className="text-purple-600" size={20} />
+          </div>
+          <div className="text-left">
+            <h3 className="font-medium text-navy">Bulk Import from Text/CSV</h3>
+            <p className="text-sm text-gray-500">Paste sermon data or upload a CSV file</p>
+          </div>
+        </div>
+        {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+      </button>
+
+      {/* Content */}
+      {expanded && (
+        <div className="p-4 space-y-4 border-t">
+          {/* Instructions */}
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-sm text-gray-600 mb-2"><strong>Supported formats:</strong></p>
+            <ul className="text-xs text-gray-500 space-y-1 list-disc list-inside">
+              <li>CSV: Date, Title, Scripture (columns in any order)</li>
+              <li>Tab-separated: Date &lt;tab&gt; Title &lt;tab&gt; Scripture</li>
+              <li>Line format: <code className="bg-gray-200 px-1 rounded">01/15/2024 Sermon Title - John 3:16</code></li>
+              <li>Or just titles: <code className="bg-gray-200 px-1 rounded">Walking by Faith (Hebrews 11:1-6)</code></li>
+            </ul>
+          </div>
+
+          {/* Default Speaker Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Default Speaker for Imported Sermons
+            </label>
+            <select
+              value={speaker}
+              onChange={(e) => setSpeaker(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm"
+            >
+              <option value="Pastor John Seydlitz">Pastor John Seydlitz</option>
+              <option value="Dr. Chris Shepler">Dr. Chris Shepler</option>
+              <option value="Guest Speaker">Guest Speaker</option>
+            </select>
+          </div>
+
+          {/* Input Area */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">Paste Data or Upload File</label>
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept=".csv,.txt,.tsv"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700"
+                >
+                  <FileText size={14} />
+                  Upload CSV
+                </button>
+              </div>
+            </div>
+            <textarea
+              rows={6}
+              value={inputText}
+              onChange={(e) => {
+                setInputText(e.target.value)
+                parseInput(e.target.value)
+              }}
+              placeholder={`Paste your sermon data here...\n\nExamples:\n01/15/2024, Walking by Faith, Hebrews 11:1-6\n01/22/2024, The Power of Prayer, James 5:13-18\n\nOr:\nJanuary 15, 2024 - Walking by Faith (Hebrews 11:1-6)\nJanuary 22, 2024 - The Power of Prayer (James 5:13-18)`}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm font-mono"
+            />
+          </div>
+
+          {/* Error Message */}
+          {parseError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700">{parseError}</p>
+            </div>
+          )}
+
+          {/* Preview */}
+          {parsedSermons.length > 0 && (
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 border-b flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">
+                  Preview: {parsedSermons.length} sermon{parsedSermons.length !== 1 ? 's' : ''} found
+                </span>
+                <span className="text-xs text-gray-500">Speaker: {speaker}</span>
+              </div>
+              <div className="max-h-48 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="text-left px-4 py-2 text-gray-600 font-medium">Date</th>
+                      <th className="text-left px-4 py-2 text-gray-600 font-medium">Title</th>
+                      <th className="text-left px-4 py-2 text-gray-600 font-medium">Scripture</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {parsedSermons.map((sermon, idx) => (
+                      <tr key={idx}>
+                        <td className="px-4 py-2 text-gray-600">
+                          {sermon.date || <span className="text-yellow-600 italic">Not found</span>}
+                        </td>
+                        <td className="px-4 py-2 text-navy font-medium">{sermon.title}</td>
+                        <td className="px-4 py-2 text-gold">
+                          {sermon.scripture || <span className="text-gray-400">-</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Import Button */}
+          {parsedSermons.length > 0 && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleImport}
+                className="flex items-center gap-2 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <Plus size={18} />
+                Import {parsedSermons.length} Sermon{parsedSermons.length !== 1 ? 's' : ''}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -831,6 +1233,10 @@ export default function SermonImportPage() {
     setSermons(prev => prev.filter((_, i) => i !== index))
   }
 
+  const handleBulkImport = (importedSermons: SermonWithAI[]) => {
+    setSermons(prev => [...prev, ...importedSermons])
+  }
+
   const saveSermons = async () => {
     setSaving(true)
     setSaveStatus('idle')
@@ -1002,6 +1408,12 @@ export default function SermonImportPage() {
         {/* Import Tab */}
         {activeTab === 'import' && (
           <div className="space-y-6">
+            {/* Bulk Import Panel */}
+            <BulkImportPanel
+              onImport={handleBulkImport}
+              defaultSpeaker="Pastor John Seydlitz"
+            />
+
             {/* Info Box */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-blue-800 text-sm">
