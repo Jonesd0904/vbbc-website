@@ -414,7 +414,13 @@ export default function AdminDashboard() {
     }
   }
 
+  const [addingStaff, setAddingStaff] = useState(false)
+
   const handleAddStaff = () => {
+    // Prevent double-adds
+    if (addingStaff) return
+    setAddingStaff(true)
+    
     const newStaff: StaffMember = {
       id: `new-${Date.now()}`,
       name: '',
@@ -424,6 +430,9 @@ export default function AdminDashboard() {
       order_index: staff.length + 1
     }
     setStaff(prev => [...prev, newStaff])
+    
+    // Reset after a short delay
+    setTimeout(() => setAddingStaff(false), 500)
   }
 
   const handleDeleteStaff = async (index: number) => {
