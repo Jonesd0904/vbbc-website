@@ -1,5 +1,6 @@
-// Audio compression utility - uses server-side FFmpeg
-// Runs on the server so it won't freeze the browser
+// Audio compression utility
+// Note: Next.js App Router has a ~4MB body limit that cannot be easily changed.
+// For files over 50MB, users should compress externally.
 
 export interface CompressionOptions {
   targetBitrate?: number;
@@ -19,7 +20,7 @@ export function formatFileSize(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-// Compress audio using server-side API
+// Compress audio - for large files, shows instructions for external compression
 export async function compressAudio(
   file: File,
   options: CompressionOptions = {}
@@ -34,48 +35,18 @@ export async function compressAudio(
     return file;
   }
   
-  console.log(`Compressing ${fileSizeMB.toFixed(1)}MB file to ~${targetBitrate}kbps...`);
-  onProgress?.(5, 'Uploading to server for compression...');
+  // For files over 50MB, show instructions to compress externally
+  // Next.js App Router has a ~4MB body limit that prevents server-side compression
+  const errorMsg = 
+    `Your file is ${fileSizeMB.toFixed(1)}MB - too large to upload directly.\n\n` +
+    `Supabase storage has a 50MB limit. Please compress your audio file first:\n\n` +
+    `1. Go to freeconvert.com/mp3-compressor\n` +
+    `2. Upload your audio file\n` +
+    `3. Set "Audio Bitrate" to 64 kbps\n` +
+    `4. Set "Audio Channels" to Mono\n` +
+    `5. Click Convert and download\n\n` +
+    `A 60-minute sermon will compress from ~60MB to ~30MB.\n` +
+    `Then upload the compressed file here.`;
   
-  try {
-    // Create form data
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('bitrate', String(targetBitrate));
-    
-    // Upload to compression API
-    const response = await fetch('/api/compress-audio', {
-      method: 'POST',
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Compression failed');
-    }
-    
-    onProgress?.(80, 'Downloading compressed file...');
-    
-    // Get compressed file
-    const compressedBlob = await response.blob();
-    const originalSize = parseInt(response.headers.get('X-Original-Size') || '0');
-    const compressedSize = parseInt(response.headers.get('X-Compressed-Size') || '0');
-    
-    // Create File object
-    const newFileName = file.name.replace(/\.[^/.]+$/, '') + '.mp3';
-    const compressedFile = new File([compressedBlob], newFileName, { type: 'audio/mp3' });
-    
-    const newSizeMB = compressedFile.size / (1024 * 1024);
-    const reduction = ((1 - newSizeMB / fileSizeMB) * 100).toFixed(0);
-    
-    console.log(`Compression complete: ${fileSizeMB.toFixed(1)}MB → ${newSizeMB.toFixed(1)}MB (${reduction}% smaller)`);
-    onProgress?.(100, `Compressed: ${formatFileSize(file.size)} → ${formatFileSize(compressedFile.size)}`);
-    
-    return compressedFile;
-    
-  } catch (error) {
-    console.error('Compression failed:', error);
-    onProgress?.(0, 'Compression failed');
-    throw error;
-  }
+  throw new Error(errorMsg);
 }

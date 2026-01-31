@@ -1008,7 +1008,7 @@ function AudioSourceSelector({
   sermonTitle: string
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const externalLinkInputRef = useRef<HTMLInputElement>(null)
+  const [externalLinkInput, setExternalLinkInput] = useState('')
   const [uploading, setUploading] = useState(false)
   const [uploadedFileName, setUploadedFileName] = useState('')
   const [progress, setProgress] = useState(0)
@@ -1258,7 +1258,10 @@ function AudioSourceSelector({
                 </a>
                 <button
                   type="button"
-                  onClick={() => onAudioUrlChange('')}
+                  onClick={() => {
+                    onAudioUrlChange('')
+                    setExternalLinkInput('')
+                  }}
                   className="text-blue-600 hover:text-blue-800 flex-shrink-0"
                 >
                   <X size={18} />
@@ -1271,15 +1274,15 @@ function AudioSourceSelector({
                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={18} />
                 <input
                   type="url"
-                  ref={externalLinkInputRef}
+                  value={externalLinkInput}
+                  onChange={(e) => setExternalLinkInput(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm"
                   placeholder="https://example.com/sermon-audio.mp3"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
-                      const input = e.target as HTMLInputElement
-                      if (input.value) {
-                        onAudioUrlChange(input.value)
+                      if (externalLinkInput.trim()) {
+                        onAudioUrlChange(externalLinkInput.trim())
                       }
                     }
                   }}
@@ -1288,8 +1291,8 @@ function AudioSourceSelector({
               <button
                 type="button"
                 onClick={() => {
-                  if (externalLinkInputRef.current?.value) {
-                    onAudioUrlChange(externalLinkInputRef.current.value)
+                  if (externalLinkInput.trim()) {
+                    onAudioUrlChange(externalLinkInput.trim())
                   }
                 }}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"

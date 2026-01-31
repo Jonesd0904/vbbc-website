@@ -35,7 +35,7 @@ export default function Home() {
             </svg>
           </div>
           <p className="font-lora italic text-gold text-lg md:text-xl mb-4">Welcome to</p>
-          <h1 className="font-cinzel text-4xl md:text-6xl lg:text-7xl text-white font-semibold mb-6">
+          <h1 className="font-trajan text-4xl md:text-6xl lg:text-7xl text-white font-semibold mb-6 tracking-wide">
             Victory Bible<br />Baptist Church
           </h1>
           <p className="font-lora text-xl md:text-2xl text-white/90 mb-4">

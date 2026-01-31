@@ -115,3 +115,12 @@ export async function POST(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+// Increase body size limit to 100MB for this route
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '100mb',
+    },
+  },
+}

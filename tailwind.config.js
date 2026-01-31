@@ -26,6 +26,7 @@ module.exports = {
       fontFamily: {
         cinzel: ['Cinzel', 'serif'],
         lora: ['Lora', 'serif'],
+        trajan: ['"Trajan Pro"', 'Cinzel', 'serif'],
       },
     },
   },
