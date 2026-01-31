@@ -266,28 +266,42 @@ export async function getStaff(): Promise<StaffMember[]> {
   }
 }
 
-export async function updateStaffMember(staff: StaffMember): Promise<boolean> {
+export async function updateStaffMember(staff: StaffMember): Promise<StaffMember | null> {
   if (!isSupabaseConfigured || !supabase) {
-    return false
+    return null
   }
   
   try {
     // If it's a new staff member (id starts with 'new-'), insert without the id
     if (staff.id.startsWith('new-')) {
       const { id, ...staffWithoutId } = staff
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('staff')
         .insert(staffWithoutId)
-      return !error
+        .select()
+        .single()
+      
+      if (error || !data) {
+        console.error('Error inserting staff:', error)
+        return null
+      }
+      return data // Return the new staff member with real ID
     }
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('staff')
       .upsert(staff)
+      .select()
+      .single()
     
-    return !error
-  } catch {
-    return false
+    if (error) {
+      console.error('Error updating staff:', error)
+      return null
+    }
+    return data
+  } catch (error) {
+    console.error('Error in updateStaffMember:', error)
+    return null
   }
 }
 

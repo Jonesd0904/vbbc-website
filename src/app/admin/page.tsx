@@ -426,7 +426,15 @@ export default function AdminDashboard() {
     setStaff(prev => [...prev, newStaff])
   }
 
-  const handleDeleteStaff = (index: number) => {
+  const handleDeleteStaff = async (index: number) => {
+    const staffToDelete = staff[index]
+    
+    // If it's a saved staff member (has real ID), delete from database
+    if (staffToDelete.id && !staffToDelete.id.startsWith('new-')) {
+      await deleteStaffMember(staffToDelete.id)
+    }
+    
+    // Remove from local state
     setStaff(prev => prev.filter((_, i) => i !== index))
   }
 
@@ -446,13 +454,27 @@ export default function AdminDashboard() {
       )
       
       const servicePromises = serviceTimes.map(st => updateServiceTime(st))
-      const staffPromises = staff.map((s, i) => updateStaffMember({ ...s, order_index: i + 1 }))
+      
+      // Handle staff members - need to update state with real IDs for new members
+      const updatedStaff: StaffMember[] = []
+      for (let i = 0; i < staff.length; i++) {
+        const s = staff[i]
+        const result = await updateStaffMember({ ...s, order_index: i + 1 })
+        if (result) {
+          updatedStaff.push(result)
+        } else {
+          // Keep original if update failed
+          updatedStaff.push(s)
+        }
+      }
+      // Update local state with real IDs
+      setStaff(updatedStaff)
+      
       const ministryPromises = ministries.map(m => updateMinistry(m))
       
       await Promise.all([
         ...contentPromises,
         ...servicePromises,
-        ...staffPromises,
         ...ministryPromises
       ])
       
