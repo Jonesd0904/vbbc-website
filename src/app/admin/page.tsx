@@ -169,6 +169,7 @@ function StaffCard({
   onChange,
   onImageUpload,
   onDelete,
+  onSave,
   isOnly
 }: {
   person: StaffMember
@@ -176,13 +177,27 @@ function StaffCard({
   onChange: (index: number, field: keyof StaffMember, value: string) => void
   onImageUpload: (index: number, file: File) => void
   onDelete: (index: number) => void
+  onSave: (index: number) => Promise<void>
   isOnly: boolean
 }) {
   const [expanded, setExpanded] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  
+  const isNew = person.id.startsWith('new-')
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSaving(true)
+    await onSave(index)
+    setSaving(false)
+    setSaveSuccess(true)
+    setTimeout(() => setSaveSuccess(false), 2000)
+  }
 
   return (
-    <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+    <div className={`rounded-lg overflow-hidden border ${isNew ? 'border-gold bg-gold/5' : 'border-gray-200 bg-gray-50'}`}>
       {/* Header */}
       <div 
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-100 transition-colors"
@@ -204,6 +219,11 @@ function StaffCard({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {isNew && (
+            <span className="text-xs bg-gold/20 text-gold-dark px-2 py-1 rounded font-medium">
+              Unsaved
+            </span>
+          )}
           {!isOnly && (
             <button
               type="button"
@@ -313,6 +333,30 @@ function StaffCard({
               placeholder="Write a biography for this staff member..."
               rows={8}
             />
+          </div>
+
+          {/* Save Button for new staff */}
+          <div className="pt-4 border-t border-gray-200 flex justify-end">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors ${
+                saveSuccess 
+                  ? 'bg-green-500 text-white'
+                  : saving
+                    ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                    : 'bg-gold text-navy hover:bg-gold-light'
+              }`}
+            >
+              {saveSuccess ? (
+                <><CheckCircle size={18} /> Saved!</>
+              ) : saving ? (
+                'Saving...'
+              ) : (
+                <><Save size={18} /> {isNew ? 'Save Staff Member' : 'Save Changes'}</>
+              )}
+            </button>
           </div>
         </div>
       )}
@@ -445,6 +489,18 @@ export default function AdminDashboard() {
     
     // Remove from local state
     setStaff(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSaveStaff = async (index: number) => {
+    const staffMember = staff[index]
+    const result = await updateStaffMember({ ...staffMember, order_index: index + 1 })
+    
+    if (result) {
+      // Update local state with the real ID from database
+      setStaff(prev => prev.map((s, i) => 
+        i === index ? result : s
+      ))
+    }
   }
 
   const handleMinistryChange = (index: number, field: keyof Ministry, value: string) => {
@@ -747,6 +803,7 @@ export default function AdminDashboard() {
                         onChange={handleStaffChange}
                         onImageUpload={handleStaffImageUpload}
                         onDelete={handleDeleteStaff}
+                        onSave={handleSaveStaff}
                         isOnly={staff.length === 1}
                       />
                     ))}
