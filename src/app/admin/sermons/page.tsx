@@ -41,6 +41,8 @@ import {
   upsertSermonSeries,
   uploadSeriesImage,
   uploadSermonAudio,
+  updateSermon,
+  deleteSermon,
   defaultSermonSeries,
 } from '@/lib/sermons'
 import { isSupabaseConfigured, supabase, Sermon } from '@/lib/supabase'
