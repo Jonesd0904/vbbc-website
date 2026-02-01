@@ -36,14 +36,16 @@ export async function getFeaturedEvent(): Promise<Event | null> {
       .order('priority', { ascending: true })
       .order('date', { ascending: true})
       .limit(1)
-      .single()
+      .maybeSingle() // Changed from .single() to .maybeSingle()
 
     if (error) {
+      console.error('Error fetching featured event:', error)
       return null
     }
 
     return data
-  } catch {
+  } catch (err) {
+    console.error('Exception fetching featured event:', err)
     return null
   }
 }
