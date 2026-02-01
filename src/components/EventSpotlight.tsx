@@ -129,28 +129,29 @@ export default function EventSpotlight() {
       <style jsx>{`
         .event-spotlight-container {
           position: relative;
-          width: 280px;
-          height: 280px;
+          width: 350px;
+          height: 350px;
           flex-shrink: 0;
         }
 
         .event-spotlight-glow {
           position: absolute;
-          inset: -20px;
+          inset: -30px;
           border-radius: 50%;
-          opacity: 0.6;
-          animation: pulse-glow 3s ease-in-out infinite;
+          opacity: 0.5;
+          animation: pulse-glow 4s ease-in-out infinite;
           pointer-events: none;
+          filter: blur(20px);
         }
 
         @keyframes pulse-glow {
           0%, 100% {
-            transform: scale(0.95);
-            opacity: 0.4;
+            transform: scale(0.98);
+            opacity: 0.3;
           }
           50% {
-            transform: scale(1.05);
-            opacity: 0.7;
+            transform: scale(1.02);
+            opacity: 0.6;
           }
         }
 
@@ -160,11 +161,13 @@ export default function EventSpotlight() {
           height: 100%;
           border-radius: 50%;
           overflow: hidden;
-          transition: transform 0.3s ease;
+          transition: all 0.4s ease;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
         .event-spotlight-container:hover .event-spotlight-portal {
-          transform: scale(1.05);
+          transform: scale(1.08);
+          box-shadow: 0 20px 60px rgba(201, 162, 39, 0.4);
         }
 
         .event-spotlight-bg {
@@ -190,7 +193,7 @@ export default function EventSpotlight() {
           position: relative;
           width: 100%;
           height: 100%;
-          padding: 30px 20px;
+          padding: 40px 25px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -201,13 +204,13 @@ export default function EventSpotlight() {
 
         .event-date-badge {
           position: absolute;
-          top: 20px;
-          right: 20px;
+          top: 25px;
+          right: 25px;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 2px;
-          padding: 8px 12px;
+          padding: 10px 14px;
           border-radius: 12px;
           color: #0f2540;
           font-weight: 600;
@@ -215,20 +218,20 @@ export default function EventSpotlight() {
         }
 
         .event-date-badge span:first-of-type {
-          font-size: 24px;
+          font-size: 28px;
           line-height: 1;
         }
 
         .event-details {
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          max-width: 220px;
+          gap: 14px;
+          max-width: 280px;
         }
 
         .event-title {
           font-family: 'Cinzel', serif;
-          font-size: 18px;
+          font-size: 22px;
           font-weight: 600;
           color: #ffffff;
           line-height: 1.2;
@@ -236,7 +239,7 @@ export default function EventSpotlight() {
         }
 
         .event-description {
-          font-size: 13px;
+          font-size: 15px;
           color: #f5f5dc;
           line-height: 1.4;
           margin: 0;
@@ -250,7 +253,7 @@ export default function EventSpotlight() {
           display: flex;
           flex-direction: column;
           gap: 6px;
-          font-size: 12px;
+          font-size: 13px;
           color: #c9a227;
         }
 
@@ -265,21 +268,21 @@ export default function EventSpotlight() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 16px;
+          padding: 10px 20px;
           border: 2px solid;
           border-radius: 8px;
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 600;
           color: #0f2540;
           background-color: #c9a227;
-          transition: all 0.2s ease;
+          transition: all 0.3s ease;
           cursor: pointer;
-          margin-top: 4px;
+          margin-top: 6px;
         }
 
         .event-cta:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(201, 162, 39, 0.4);
+          transform: translateY(-3px);
+          box-shadow: 0 6px 16px rgba(201, 162, 39, 0.5);
         }
 
         .event-spotlight-fade {
@@ -288,25 +291,25 @@ export default function EventSpotlight() {
           border-radius: 50%;
           background: radial-gradient(
             circle at center,
-            transparent 40%,
-            rgba(15, 37, 64, 0.4) 70%,
-            rgba(15, 37, 64, 0.9) 100%
+            transparent 35%,
+            rgba(15, 37, 64, 0.3) 65%,
+            rgba(15, 37, 64, 0.8) 100%
           );
           pointer-events: none;
         }
 
         @media (max-width: 768px) {
           .event-spotlight-container {
-            width: 240px;
-            height: 240px;
+            width: 280px;
+            height: 280px;
           }
 
           .event-title {
-            font-size: 16px;
+            font-size: 18px;
           }
 
           .event-description {
-            font-size: 12px;
+            font-size: 13px;
           }
         }
       `}</style>

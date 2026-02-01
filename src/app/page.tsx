@@ -32,43 +32,45 @@ export default function Home() {
         
         {/* Main Content Container */}
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-20 pb-20">
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
+          <div className="grid lg:grid-cols-[350px_1fr] gap-8 lg:gap-16 items-start">
             
             {/* Event Spotlight - Left Side (Desktop only) */}
-            <div className="hidden lg:flex items-center justify-start flex-shrink-0 lg:self-start lg:mt-8">
+            <div className="hidden lg:flex items-center justify-start lg:mt-8">
               <EventSpotlight />
             </div>
 
-            {/* Main Hero Content - Center */}
-            <div className="text-center flex-shrink-0">
-              <div className="mb-6">
-                <svg className="w-20 h-20 mx-auto text-gold" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M50 5 L50 95 M30 25 L70 25" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <p className="font-lora italic text-gold text-lg md:text-xl mb-4">Welcome to</p>
-              <h1 className="font-trajan text-4xl md:text-6xl lg:text-7xl text-white font-semibold mb-6 tracking-wide">
-                Victory Bible<br />Baptist Church
-              </h1>
-              <p className="font-lora text-xl md:text-2xl text-white/90 mb-4">
-                Living by Faith. Enjoying Victory in Christ.
-              </p>
-              <p className="font-lora italic text-gold/90 text-lg mb-10 max-w-2xl mx-auto">
-                "But thanks be to God, which giveth us the victory through our Lord Jesus Christ."
-                <span className="block mt-2 text-white/70">— 1 Corinthians 15:57</span>
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-                <Link href="/about" className="btn-primary">
-                  Plan Your Visit
-                </Link>
-                <Link href="/livestream" className="btn-secondary">
-                  Watch Live
-                </Link>
-              </div>
-              
-              {/* Scroll Indicator - Now below buttons */}
-              <div className="animate-bounce mt-8">
-                <ChevronDown className="text-white/50 mx-auto" size={32} />
+            {/* Main Hero Content - Center (truly centered) */}
+            <div className="text-center lg:col-start-1 lg:col-span-2 lg:flex lg:justify-center">
+              <div className="max-w-3xl">
+                <div className="mb-6">
+                  <svg className="w-20 h-20 mx-auto text-gold" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 5 L50 95 M30 25 L70 25" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <p className="font-lora italic text-gold text-lg md:text-xl mb-4">Welcome to</p>
+                <h1 className="font-trajan text-4xl md:text-6xl lg:text-7xl text-white font-semibold mb-6 tracking-wide">
+                  Victory Bible<br />Baptist Church
+                </h1>
+                <p className="font-lora text-xl md:text-2xl text-white/90 mb-4">
+                  Living by Faith. Enjoying Victory in Christ.
+                </p>
+                <p className="font-lora italic text-gold/90 text-lg mb-10 max-w-2xl mx-auto">
+                  "But thanks be to God, which giveth us the victory through our Lord Jesus Christ."
+                  <span className="block mt-2 text-white/70">— 1 Corinthians 15:57</span>
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                  <Link href="/about" className="btn-primary">
+                    Plan Your Visit
+                  </Link>
+                  <Link href="/livestream" className="btn-secondary">
+                    Watch Live
+                  </Link>
+                </div>
+                
+                {/* Scroll Indicator - Now below buttons */}
+                <div className="animate-bounce mt-8">
+                  <ChevronDown className="text-white/50 mx-auto" size={32} />
+                </div>
               </div>
             </div>
           </div>
