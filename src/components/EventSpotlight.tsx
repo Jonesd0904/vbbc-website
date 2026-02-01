@@ -138,20 +138,20 @@ export default function EventSpotlight() {
           position: absolute;
           inset: -30px;
           border-radius: 50%;
-          opacity: 0.5;
-          animation: pulse-glow 4s ease-in-out infinite;
+          opacity: 0.7;
+          animation: pulse-glow 3s ease-in-out infinite;
           pointer-events: none;
-          filter: blur(20px);
+          filter: blur(25px);
         }
 
         @keyframes pulse-glow {
           0%, 100% {
-            transform: scale(0.98);
-            opacity: 0.3;
+            transform: scale(0.92);
+            opacity: 0.4;
           }
           50% {
-            transform: scale(1.02);
-            opacity: 0.6;
+            transform: scale(1.08);
+            opacity: 0.9;
           }
         }
 

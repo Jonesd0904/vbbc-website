@@ -31,11 +31,11 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/20"></div>
         
         {/* Main Content Container */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-20 pb-20">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-12 pb-20">
           <div className="grid lg:grid-cols-[350px_1fr] gap-8 lg:gap-16 items-start">
             
-            {/* Event Spotlight - Left Side (Desktop only) */}
-            <div className="hidden lg:flex items-center justify-start lg:mt-8">
+            {/* Event Spotlight - Left Side (Desktop only) - Further left */}
+            <div className="hidden lg:flex items-center justify-start lg:mt-4 lg:-ml-12">
               <EventSpotlight />
             </div>
 
