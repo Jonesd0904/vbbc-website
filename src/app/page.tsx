@@ -31,11 +31,11 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/20"></div>
         
         {/* Main Content Container */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-20">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-20 pb-20">
           <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
             
-            {/* Event Spotlight - Left Side (Visible on all devices for testing) */}
-            <div className="flex items-center justify-center flex-shrink-0">
+            {/* Event Spotlight - Left Side (Desktop only) */}
+            <div className="hidden lg:flex items-center justify-start flex-shrink-0 lg:self-start lg:mt-8">
               <EventSpotlight />
             </div>
 
@@ -57,7 +57,7 @@ export default function Home() {
                 "But thanks be to God, which giveth us the victory through our Lord Jesus Christ."
                 <span className="block mt-2 text-white/70">— 1 Corinthians 15:57</span>
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
                 <Link href="/about" className="btn-primary">
                   Plan Your Visit
                 </Link>
@@ -65,12 +65,12 @@ export default function Home() {
                   Watch Live
                 </Link>
               </div>
+              
+              {/* Scroll Indicator - Now below buttons */}
+              <div className="animate-bounce mt-8">
+                <ChevronDown className="text-white/50 mx-auto" size={32} />
+              </div>
             </div>
-          </div>
-          
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-            <ChevronDown className="text-white/50" size={32} />
           </div>
         </div>
       </section>

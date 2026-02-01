@@ -11,28 +11,16 @@ export default function EventSpotlight() {
 
   useEffect(() => {
     async function loadEvent() {
-      console.log('🔍 EventSpotlight: Starting to load featured event...')
       const featuredEvent = await getFeaturedEvent()
-      console.log('📊 EventSpotlight: Result from getFeaturedEvent():', featuredEvent)
       setEvent(featuredEvent)
       setLoading(false)
     }
     loadEvent()
   }, [])
 
-  console.log('🎨 EventSpotlight render:', { loading, hasEvent: !!event, event })
-
-  if (loading) {
-    console.log('⏳ EventSpotlight: Still loading...')
+  if (loading || !event) {
     return null
   }
-
-  if (!event) {
-    console.log('⚠️ EventSpotlight: No event to display')
-    return null
-  }
-
-  console.log('✅ EventSpotlight: Rendering portal for event:', event.title)
 
   const eventDate = new Date(event.date)
   const formattedDate = eventDate.toLocaleDateString('en-US', {
