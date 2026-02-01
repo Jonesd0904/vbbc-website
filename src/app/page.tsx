@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronDown, MapPin, Clock, Phone, BookOpen, Users, Music, Heart } from 'lucide-react'
+import EventSpotlight from '@/components/EventSpotlight'
 
 export default function Home() {
   useEffect(() => {
@@ -25,34 +26,49 @@ export default function Home() {
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-dark via-navy to-navy-light">
+      {/* Hero Section with Event Spotlight */}
+      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-dark via-navy to-navy-light overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative z-10 text-center px-6 pt-20">
-          <div className="mb-6">
-            <svg className="w-20 h-20 mx-auto text-gold" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M50 5 L50 95 M30 25 L70 25" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/>
-            </svg>
+        
+        {/* Main Content Container */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-20">
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
+            
+            {/* Event Spotlight - Left Side (Desktop only) */}
+            <div className="hidden lg:flex items-center justify-center flex-shrink-0">
+              <EventSpotlight />
+            </div>
+
+            {/* Main Hero Content - Center */}
+            <div className="text-center flex-shrink-0">
+              <div className="mb-6">
+                <svg className="w-20 h-20 mx-auto text-gold" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M50 5 L50 95 M30 25 L70 25" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <p className="font-lora italic text-gold text-lg md:text-xl mb-4">Welcome to</p>
+              <h1 className="font-trajan text-4xl md:text-6xl lg:text-7xl text-white font-semibold mb-6 tracking-wide">
+                Victory Bible<br />Baptist Church
+              </h1>
+              <p className="font-lora text-xl md:text-2xl text-white/90 mb-4">
+                Living by Faith. Enjoying Victory in Christ.
+              </p>
+              <p className="font-lora italic text-gold/90 text-lg mb-10 max-w-2xl mx-auto">
+                "But thanks be to God, which giveth us the victory through our Lord Jesus Christ."
+                <span className="block mt-2 text-white/70">— 1 Corinthians 15:57</span>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/about" className="btn-primary">
+                  Plan Your Visit
+                </Link>
+                <Link href="/livestream" className="btn-secondary">
+                  Watch Live
+                </Link>
+              </div>
+            </div>
           </div>
-          <p className="font-lora italic text-gold text-lg md:text-xl mb-4">Welcome to</p>
-          <h1 className="font-trajan text-4xl md:text-6xl lg:text-7xl text-white font-semibold mb-6 tracking-wide">
-            Victory Bible<br />Baptist Church
-          </h1>
-          <p className="font-lora text-xl md:text-2xl text-white/90 mb-4">
-            Living by Faith. Enjoying Victory in Christ.
-          </p>
-          <p className="font-lora italic text-gold/90 text-lg mb-10 max-w-2xl mx-auto">
-            "But thanks be to God, which giveth us the victory through our Lord Jesus Christ."
-            <span className="block mt-2 text-white/70">— 1 Corinthians 15:57</span>
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/about" className="btn-primary">
-              Plan Your Visit
-            </Link>
-            <Link href="/livestream" className="btn-secondary">
-              Watch Live
-            </Link>
-          </div>
+          
+          {/* Scroll Indicator */}
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
             <ChevronDown className="text-white/50" size={32} />
           </div>

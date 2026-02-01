@@ -23,7 +23,8 @@ import {
   Trash2,
   GripVertical,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Calendar
 } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -618,6 +619,22 @@ export default function AdminDashboard() {
     </Link>
   )
 
+  const EventsCard = () => (
+    <Link 
+      href="/admin/events"
+      className="block bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl p-6 text-white hover:shadow-lg transition-all group mt-4"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+          <Calendar className="text-gold" size={24} />
+        </div>
+        <ArrowRight className="text-white/60 group-hover:text-gold group-hover:translate-x-1 transition-all" size={24} />
+      </div>
+      <h3 className="font-cinzel text-lg mb-2">Event Spotlight</h3>
+      <p className="text-gray-300 text-sm">Manage featured events on homepage portal</p>
+    </Link>
+  )
+
   return (
     <div className="min-h-screen bg-gray-100 pt-20">
       {/* Header */}
@@ -665,6 +682,7 @@ export default function AdminDashboard() {
             </div>
 
             <SermonImportCard />
+            <EventsCard />
 
             {/* Save Button */}
             <button
