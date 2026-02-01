@@ -59,7 +59,6 @@ export function getLargeFileErrorMessage(file: File): string {
 
 // Dynamically load lamejs
 async function loadLamejs(): Promise<typeof import('lamejs')> {
-  // @ts-expect-error - lamejs doesn't have proper types
   const lamejs = await import('lamejs');
   return lamejs.default || lamejs;
 }
