@@ -34,8 +34,8 @@ export default function Home() {
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-12 pb-20">
           <div className="grid lg:grid-cols-[350px_1fr] gap-8 lg:gap-16 items-start">
             
-            {/* Event Spotlight - Left Side (Desktop only) - Further left */}
-            <div className="hidden lg:flex items-center justify-start lg:mt-4 lg:-ml-12">
+            {/* Event Spotlight - Left Side (Desktop only) - Further left and lower */}
+            <div className="hidden lg:flex items-center justify-start lg:mt-16 lg:-ml-24">
               <EventSpotlight />
             </div>
 
