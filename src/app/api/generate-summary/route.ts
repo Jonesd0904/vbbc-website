@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
+  let title = ''
+  let speaker = ''
+  let scripture: string | undefined
+  let series: string | undefined
+  
   try {
     const body = await request.json()
-    const { title, scripture, series, speaker } = body
+    title = body.title
+    speaker = body.speaker
+    scripture = body.scripture
+    series = body.series
     
     if (!title) {
       return NextResponse.json(
@@ -61,10 +69,10 @@ export async function POST(request: NextRequest) {
     
     // Fallback to basic summary on error
     const fallback = generateFallbackSummary(
-      body.title, 
-      body.speaker, 
-      body.scripture, 
-      body.series
+      title, 
+      speaker, 
+      scripture, 
+      series
     )
     
     return NextResponse.json(fallback)
