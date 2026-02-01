@@ -125,6 +125,130 @@ function AISummaryGenerator({
   )
 }
 
+// Existing Sermon Edit Card Component
+function ExistingSermonCard({
+  sermon,
+  series,
+  onUpdate,
+  onDelete,
+}: {
+  sermon: Sermon
+  series: SermonSeries[]
+  onUpdate: () => void
+  onDelete: () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  
+  const [title, setTitle] = useState(sermon.title)
+  const [speaker, setSpeaker] = useState(sermon.speaker)
+  const [date, setDate] = useState(sermon.date)
+  const [seriesName, setSeriesName] = useState(sermon.series || '')
+  const [scripture, setScripture] = useState(sermon.scripture || '')
+  const [description, setDescription] = useState(sermon.description || '')
+  const [youtubeUrl, setYoutubeUrl] = useState(sermon.youtube_url || '')
+  const [audioUrl, setAudioUrl] = useState(sermon.audio_url || '')
+  const [audioSourceType, setAudioSourceType] = useState<AudioSourceType>(
+    sermon.youtube_url ? 'youtube' : 'external_link'
+  )
+
+  const handleSave = async () => {
+    setSaving(true)
+    const updates: Partial<SermonWithAI> = { title, speaker, date, series: seriesName, scripture, description, youtube_url: youtubeUrl, audio_url: audioUrl }
+    const success = await updateSermon(sermon.id, updates)
+    if (success) { setEditing(false); onUpdate() }
+    setSaving(false)
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete "${sermon.title}"? This cannot be undone.`)) return
+    setDeleting(true)
+    const success = await deleteSermon(sermon.id)
+    if (success) onDelete()
+    setDeleting(false)
+  }
+
+  const handleAISummary = async () => {
+    const res = await fetch('/api/generate-summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, scripture, series: seriesName, speaker })
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setDescription(data.description || description)
+    }
+  }
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between p-4 bg-gray-50">
+        <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+          <button>{expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</button>
+          <div className="flex-1">
+            <h4 className="font-medium text-navy">{sermon.title}</h4>
+            <p className="text-sm text-gray-500">
+              {sermon.speaker} • {new Date(sermon.date).toLocaleDateString()}
+              {sermon.youtube_url && <span className="ml-2 text-red-500">• YouTube</span>}
+              {sermon.audio_url && !sermon.youtube_url && <span className="ml-2 text-green-500">• Audio</span>}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {!editing ? (
+            <button onClick={() => setEditing(true)} className="p-2 text-navy hover:bg-navy-light/10 rounded-lg"><Edit size={18} /></button>
+          ) : (
+            <>
+              <button onClick={() => { setEditing(false); setTitle(sermon.title); setSpeaker(sermon.speaker); setDate(sermon.date); setSeriesName(sermon.series || ''); setScripture(sermon.scripture || ''); setDescription(sermon.description || ''); setYoutubeUrl(sermon.youtube_url || ''); setAudioUrl(sermon.audio_url || ''); }} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-3 py-1.5 text-sm bg-navy text-white rounded-lg hover:bg-navy-light disabled:opacity-50">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            </>
+          )}
+          <button onClick={handleDelete} disabled={deleting} className="p-2 text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-50">
+            {deleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+          </button>
+        </div>
+      </div>
+      {expanded && (
+        <div className="p-4 space-y-4 border-t">
+          {editing ? (
+            <>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Title *</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm" /></div>
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Speaker *</label><select value={speaker} onChange={(e) => setSpeaker(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm"><option value="">Select</option><option value="Pastor John Seydlitz">Pastor John Seydlitz</option><option value="Dr. Chris Shepler">Dr. Chris Shepler</option><option value="Guest Speaker">Guest Speaker</option></select></div>
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Date *</label><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm" /></div>
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">Series</label><select value={seriesName} onChange={(e) => setSeriesName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm"><option value="">Select</option>{series.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div>
+                <div className="md:col-span-2"><label className="block text-sm font-medium text-gray-700 mb-1">Scripture</label><input type="text" value={scripture} onChange={(e) => setScripture(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm" placeholder="e.g., John 3:16" /></div>
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">Audio/Video</label>
+                <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+                  <button type="button" onClick={() => setAudioSourceType('youtube')} className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm ${audioSourceType === 'youtube' ? 'bg-red-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}><Youtube size={16} />YouTube</button>
+                  <button type="button" onClick={() => setAudioSourceType('external_link')} className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm border-l ${audioSourceType === 'external_link' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}><ExternalLink size={16} />Link</button>
+                </div>
+                {audioSourceType === 'youtube' ? <div className="relative"><Youtube className="absolute left-3 top-1/2 -translate-y-1/2 text-red-500" size={18} /><input type="url" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm" placeholder="https://youtube.com/watch?v=..." /></div> : <div className="relative"><LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={18} /><input type="url" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm" placeholder="https://example.com/sermon.mp3" /></div>}
+              </div>
+              <div><div className="flex items-center justify-between mb-1"><label className="block text-sm font-medium text-gray-700">Description</label><button onClick={handleAISummary} className="flex items-center gap-2 px-3 py-1.5 rounded text-sm bg-purple-100 text-purple-700 hover:bg-purple-200"><Sparkles size={14} />Regenerate AI</button></div><textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent text-sm" /></div>
+            </>
+          ) : (
+            <div className="space-y-3">
+              {sermon.series && <div><span className="text-sm font-medium text-gray-500">Series:</span><span className="ml-2 text-gold">{sermon.series}</span></div>}
+              {sermon.scripture && <div><span className="text-sm font-medium text-gray-500">Scripture:</span><span className="ml-2 text-navy">{sermon.scripture}</span></div>}
+              {sermon.description && <div><span className="text-sm font-medium text-gray-500">Description:</span><p className="text-sm text-gray-700 mt-1">{sermon.description}</p></div>}
+              {sermon.youtube_url && <div><span className="text-sm font-medium text-gray-500">YouTube:</span><a href={sermon.youtube_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-sm text-red-500 hover:underline">{sermon.youtube_url}</a></div>}
+              {sermon.audio_url && <div><span className="text-sm font-medium text-gray-500">Audio:</span><a href={sermon.audio_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-sm text-blue-500 hover:underline truncate inline-block max-w-md">{sermon.audio_url}</a></div>}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Bulk Import Component
 interface ParsedSermon {
   date: string
@@ -1818,7 +1942,7 @@ export default function SermonImportPage() {
   const tabs = [
     { id: 'import' as Tab, label: 'Import Sermons', icon: <Upload size={18} /> },
     { id: 'series' as Tab, label: 'Manage Series', icon: <FolderOpen size={18} /> },
-    { id: 'manage' as Tab, label: 'All Sermons', icon: <BookOpen size={18} /> },
+    { id: 'manage' as Tab, label: 'Edit Sermons', icon: <Edit size={18} /> },
   ]
 
   return (
@@ -1836,8 +1960,8 @@ export default function SermonImportPage() {
             </Link>
             <div className="w-px h-6 bg-gray-600" />
             <div>
-              <h1 className="font-cinzel text-xl">Sermon Import</h1>
-              <p className="text-gray-300 text-sm">Bulk add and manage sermons</p>
+              <h1 className="font-cinzel text-xl">Sermon Management</h1>
+              <p className="text-gray-300 text-sm">Import, edit, and manage sermons</p>
             </div>
           </div>
           {!isSupabaseConfigured && (
@@ -2026,8 +2150,15 @@ export default function SermonImportPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="font-cinzel text-xl text-navy">
-                All Sermons ({existingSermons.length})
+                Edit Sermons ({existingSermons.length})
               </h2>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-blue-800 text-sm">
+                <strong>Edit Sermons:</strong> Click on any sermon to expand and edit details. 
+                You can update information, regenerate AI summaries, change audio sources, or delete sermons.
+              </p>
             </div>
 
             {existingSermons.length === 0 ? (
@@ -2037,63 +2168,16 @@ export default function SermonImportPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-                        Title
-                      </th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-                        Speaker
-                      </th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-                        Date
-                      </th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-                        Series
-                      </th>
-                      <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-                        Media
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {existingSermons.map((sermon) => (
-                      <tr key={sermon.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm text-navy font-medium">
-                          {sermon.title}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {sermon.speaker}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {new Date(sermon.date).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gold">
-                          {sermon.series || '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          <div className="flex gap-2">
-                            {sermon.youtube_url && (
-                              <span className="inline-flex items-center gap-1 text-red-500">
-                                <Youtube size={14} />
-                              </span>
-                            )}
-                            {sermon.audio_url && (
-                              <span className="inline-flex items-center gap-1 text-green-500">
-                                <Music size={14} />
-                              </span>
-                            )}
-                            {!sermon.youtube_url && !sermon.audio_url && (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-3">
+                {existingSermons.map((sermon) => (
+                  <ExistingSermonCard
+                    key={sermon.id}
+                    sermon={sermon}
+                    series={sermonSeries}
+                    onUpdate={loadData}
+                    onDelete={loadData}
+                  />
+                ))}
               </div>
             )}
           </div>
