@@ -116,11 +116,5 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Increase body size limit to 100MB for this route
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '100mb',
-    },
-  },
-}
+// Note: For App Router, body size limits are configured in next.config.js
+// or using route segment config: export const maxDuration = 300 (for timeout)
