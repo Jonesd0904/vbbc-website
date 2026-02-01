@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
   let speaker = ''
   let scripture: string | undefined
   let series: string | undefined
+  let notes: string | undefined
   
   try {
     const body = await request.json()
@@ -12,6 +13,7 @@ export async function POST(request: NextRequest) {
     speaker = body.speaker
     scripture = body.scripture
     series = body.series
+    notes = body.notes
     
     if (!title) {
       return NextResponse.json(
@@ -24,11 +26,11 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
       console.warn('ANTHROPIC_API_KEY not configured, using fallback summaries')
-      return NextResponse.json(generateFallbackSummary(title, speaker, scripture, series))
+      return NextResponse.json(generateFallbackSummary(title, speaker, scripture, series, notes))
     }
     
     // Generate AI summary using Claude
-    const prompt = buildPrompt(title, speaker, scripture, series)
+    const prompt = buildPrompt(title, speaker, scripture, series, notes)
     
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -72,22 +74,33 @@ export async function POST(request: NextRequest) {
       title, 
       speaker, 
       scripture, 
-      series
+      series,
+      notes
     )
     
     return NextResponse.json(fallback)
   }
 }
 
-function buildPrompt(title: string, speaker: string, scripture?: string, series?: string): string {
-  return `You are a Baptist church content writer creating sermon summaries for Victory Bible Baptist Church's website.
+function buildPrompt(title: string, speaker: string, scripture?: string, series?: string, notes?: string): string {
+  let prompt = `You are a Baptist church content writer creating sermon summaries for Victory Bible Baptist Church's website.
 
 Generate a formal, theologically sound summary for this sermon:
 
 Title: ${title}
 Speaker: ${speaker || 'our pastor'}
 ${scripture ? `Scripture: ${scripture}` : ''}
-${series ? `Sermon Series: ${series}` : ''}
+${series ? `Sermon Series: ${series}` : ''}`
+
+  // Add notes if provided
+  if (notes && notes.trim()) {
+    prompt += `
+
+Sermon Notes/Outline:
+${notes.trim()}`
+  }
+
+  prompt += `
 
 Provide the following in this exact format:
 
@@ -104,10 +117,13 @@ Guidelines:
 - Use formal, traditional Baptist theological language
 - Focus on biblical exposition and application
 - Be specific to the scripture if provided
+${notes ? '- Base your summary on the sermon notes/outline provided above' : ''}
 - Keep theme to ONE sentence (under 100 characters)
 - Make description compelling yet reverent (2-3 sentences)
 - Ensure key points are substantive theological insights, not generic statements
 - Reference the scripture passage specifically when describing the message`
+
+  return prompt
 }
 
 function parseAIResponse(content: string): { theme: string; description: string; keyPoints: string[] } {
@@ -140,7 +156,8 @@ function generateFallbackSummary(
   title: string, 
   speaker: string, 
   scripture?: string, 
-  series?: string
+  series?: string,
+  notes?: string
 ): { theme: string; description: string; keyPoints: string[] } {
   // Basic fallback when API is unavailable
   const theme = scripture 

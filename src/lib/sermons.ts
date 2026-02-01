@@ -21,6 +21,7 @@ export interface SermonWithAI {
   series?: string
   scripture?: string
   description?: string
+  notes?: string  // Sermon notes/outline/key points for AI summary generation
   theme?: string
   key_points?: string[]
   youtube_url?: string
