@@ -101,6 +101,7 @@ export async function createEvent(event: Omit<Event, 'id' | 'created_at'>): Prom
 // Update event
 export async function updateEvent(id: string, updates: Partial<Event>): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) {
+    console.error('Supabase not configured')
     return false
   }
 
@@ -110,8 +111,14 @@ export async function updateEvent(id: string, updates: Partial<Event>): Promise<
       .update(updates)
       .eq('id', id)
 
-    return !error
-  } catch {
+    if (error) {
+      console.error('Error updating event:', error)
+      return false
+    }
+
+    return true
+  } catch (err) {
+    console.error('Exception updating event:', err)
     return false
   }
 }
@@ -119,6 +126,7 @@ export async function updateEvent(id: string, updates: Partial<Event>): Promise<
 // Delete event
 export async function deleteEvent(id: string): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) {
+    console.error('Supabase not configured')
     return false
   }
 
@@ -128,8 +136,15 @@ export async function deleteEvent(id: string): Promise<boolean> {
       .delete()
       .eq('id', id)
 
-    return !error
-  } catch {
+    if (error) {
+      console.error('Error deleting event:', error)
+      alert(`Failed to delete event: ${error.message}`)
+      return false
+    }
+
+    return true
+  } catch (err) {
+    console.error('Exception deleting event:', err)
     return false
   }
 }
