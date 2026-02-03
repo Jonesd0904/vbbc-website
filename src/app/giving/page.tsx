@@ -1,8 +1,35 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Heart } from 'lucide-react'
 
 export default function GivingPage() {
+  const [scriptLoaded, setScriptLoaded] = useState(false)
+
+  useEffect(() => {
+    // Check if script is already loaded
+    if (typeof window !== 'undefined' && (window as any).tithelyGive) {
+      setScriptLoaded(true)
+      return
+    }
+
+    // Load the Tithely script if not already loaded
+    const script = document.createElement('script')
+    script.src = 'https://static.tithely.com/give/give.js'
+    script.async = true
+    script.onload = () => {
+      setScriptLoaded(true)
+    }
+    document.body.appendChild(script)
+
+    return () => {
+      // Cleanup if needed
+      if (script.parentNode) {
+        script.parentNode.removeChild(script)
+      }
+    }
+  }, [])
+
   return (
     <main className="pt-20">
       {/* Hero Section */}
@@ -39,27 +66,42 @@ export default function GivingPage() {
           
           {/* Tithely Give Button */}
           <div className="flex justify-center">
-            <button 
-              className="tithely-give-button hover:opacity-90 transition-opacity shadow-lg hover:shadow-xl"
-              data-form="b52c1053-6865-11ee-90fc-1260ab546d11"
-              style={{
+            {scriptLoaded ? (
+              <button 
+                className="tithely-give-button hover:opacity-90 transition-opacity shadow-lg hover:shadow-xl"
+                data-form="b52c1053-6865-11ee-90fc-1260ab546d11"
+                style={{
+                  backgroundColor: '#00DB72',
+                  fontFamily: 'inherit',
+                  fontWeight: 'bold',
+                  fontSize: '19px',
+                  padding: '15px 70px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundImage: 'none',
+                  color: 'white',
+                  textShadow: 'none',
+                  display: 'inline-block',
+                  float: 'none' as any,
+                  border: 'none'
+                }}
+              >
+                Give
+              </button>
+            ) : (
+              <div className="inline-flex items-center justify-center" style={{
                 backgroundColor: '#00DB72',
                 fontFamily: 'inherit',
                 fontWeight: 'bold',
                 fontSize: '19px',
                 padding: '15px 70px',
                 borderRadius: '4px',
-                cursor: 'pointer',
-                backgroundImage: 'none',
                 color: 'white',
-                textShadow: 'none',
-                display: 'inline-block',
-                float: 'none',
-                border: 'none'
-              }}
-            >
-              Give
-            </button>
+                opacity: 0.7
+              }}>
+                Loading...
+              </div>
+            )}
           </div>
         </div>
       </section>
