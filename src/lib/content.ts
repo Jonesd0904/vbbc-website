@@ -23,6 +23,9 @@ export interface Ministry {
   title: string
   description: string
   icon: string
+  image_url?: string
+  carousel_enabled?: boolean
+  carousel_images?: string[]
   order_index: number
 }
 
@@ -104,11 +107,11 @@ export const defaultStaff: StaffMember[] = [
 ]
 
 export const defaultMinistries: Ministry[] = [
-  { id: '1', title: "Children's Ministry", description: 'Building a foundation of faith for the next generation through Bible teaching and fun activities.', icon: 'users', order_index: 1 },
-  { id: '2', title: 'Youth Ministry', description: 'Equipping teens to stand firm in their faith and become leaders for Christ.', icon: 'users', order_index: 2 },
-  { id: '3', title: 'Adult Bible Study', description: 'Deep dives into God\'s Word for spiritual growth and practical application.', icon: 'book', order_index: 3 },
-  { id: '4', title: 'Music Ministry', description: 'Glorifying God through traditional hymns and Christ-honoring music.', icon: 'music', order_index: 4 },
-  { id: '5', title: 'Outreach & Missions', description: 'Reaching the world with the Gospel of Jesus Christ.', icon: 'globe', order_index: 5 },
+  { id: '1', title: "Children's Ministry", description: 'Building a foundation of faith for the next generation through Bible teaching and fun activities.', icon: 'users', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 1 },
+  { id: '2', title: 'Youth Ministry', description: 'Equipping teens to stand firm in their faith and become leaders for Christ.', icon: 'users', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 2 },
+  { id: '3', title: 'Adult Bible Study', description: 'Deep dives into God\'s Word for spiritual growth and practical application.', icon: 'book', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 3 },
+  { id: '4', title: 'Music Ministry', description: 'Glorifying God through traditional hymns and Christ-honoring music.', icon: 'music', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 4 },
+  { id: '5', title: 'Outreach & Missions', description: 'Reaching the world with the Gospel of Jesus Christ.', icon: 'globe', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 5 },
 ]
 
 // Image upload function

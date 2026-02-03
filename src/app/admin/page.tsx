@@ -163,6 +163,279 @@ function ImageUploader({
   )
 }
 
+// Ministry Card Component with expand/collapse
+function MinistryCard({
+  ministry,
+  index,
+  onChange,
+  onImageUpload,
+  onCarouselToggle,
+  onCarouselImageAdd,
+  onCarouselImageRemove,
+  onSave
+}: {
+  ministry: Ministry
+  index: number
+  onChange: (index: number, field: keyof Ministry, value: string) => void
+  onImageUpload: (index: number, file: File) => Promise<void>
+  onCarouselToggle: (index: number, enabled: boolean) => void
+  onCarouselImageAdd: (index: number, file: File) => Promise<void>
+  onCarouselImageRemove: (index: number, imageIndex: number) => void
+  onSave: (index: number) => Promise<void>
+}) {
+  const [expanded, setExpanded] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const carouselInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingMain, setUploadingMain] = useState(false)
+  const [uploadingCarousel, setUploadingCarousel] = useState(false)
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSaving(true)
+    await onSave(index)
+    setSaving(false)
+    setSaveSuccess(true)
+    setTimeout(() => setSaveSuccess(false), 2000)
+  }
+
+  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setUploadingMain(true)
+      await onImageUpload(index, file)
+      setUploadingMain(false)
+    }
+  }
+
+  const handleCarouselImageAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setUploadingCarousel(true)
+      await onCarouselImageAdd(index, file)
+      setUploadingCarousel(false)
+    }
+  }
+
+  return (
+    <div className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+      {/* Header */}
+      <div 
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-navy rounded-full flex items-center justify-center flex-shrink-0">
+            {ministry.image_url ? (
+              <div className="w-10 h-10 rounded-full overflow-hidden relative">
+                <Image src={ministry.image_url} alt={ministry.title} fill className="object-cover" />
+              </div>
+            ) : (
+              <BookOpen className="text-gold" size={20} />
+            )}
+          </div>
+          <div>
+            <h4 className="font-medium text-gray-800">{ministry.title || 'New Ministry'}</h4>
+            <p className="text-xs text-gray-500">
+              {ministry.image_url && 'Has image'}
+              {ministry.carousel_enabled && ` • Carousel (${ministry.carousel_images?.length || 0} images)`}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {expanded ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+        </div>
+      </div>
+
+      {/* Expanded Content */}
+      {expanded && (
+        <div className="p-4 border-t border-gray-200 space-y-4">
+          {/* Ministry Name & Icon */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ministry Name</label>
+              <input
+                type="text"
+                value={ministry.title}
+                onChange={(e) => onChange(index, 'title', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+                placeholder="Ministry name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Icon Type</label>
+              <select
+                value={ministry.icon}
+                onChange={(e) => onChange(index, 'icon', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
+              >
+                <option value="users">Users</option>
+                <option value="book">Book</option>
+                <option value="music">Music</option>
+                <option value="globe">Globe</option>
+                <option value="heart">Heart</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <RichTextEditor
+              value={ministry.description}
+              onChange={(value) => onChange(index, 'description', value)}
+              placeholder="Describe this ministry..."
+              rows={4}
+            />
+          </div>
+
+          {/* Main Image Upload */}
+          <div className="border-t pt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-3">Ministry Image</label>
+            <div className="flex items-start gap-4">
+              <div className="w-32 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 relative">
+                {ministry.image_url ? (
+                  <Image src={ministry.image_url} alt={ministry.title} fill className="object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <ImageIcon size={32} />
+                  </div>
+                )}
+              </div>
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleMainImageUpload}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingMain}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm ${
+                    uploadingMain
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                      : 'bg-navy text-white hover:bg-navy-light'
+                  }`}
+                >
+                  {uploadingMain ? (
+                    'Uploading...'
+                  ) : (
+                    <>
+                      <Upload size={14} />
+                      {ministry.image_url ? 'Change Image' : 'Upload Image'}
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-gray-500 mt-2">Landscape image (16:9) recommended</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Carousel Feature */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-gray-700">Image Carousel</label>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ministry.carousel_enabled || false}
+                  onChange={(e) => onCarouselToggle(index, e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+              </label>
+            </div>
+            
+            {ministry.carousel_enabled && (
+              <div className="space-y-3">
+                <p className="text-xs text-gray-600">Add multiple images to display as a carousel on the ministries page.</p>
+                
+                {/* Carousel Images Grid */}
+                {ministry.carousel_images && ministry.carousel_images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {ministry.carousel_images.map((imageUrl, imageIndex) => (
+                      <div key={imageIndex} className="relative group">
+                        <div className="w-full h-24 bg-gray-200 rounded-lg overflow-hidden relative">
+                          <Image src={imageUrl} alt={`Carousel ${imageIndex + 1}`} fill className="object-cover" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onCarouselImageRemove(index, imageIndex)}
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Carousel Image Button */}
+                <div>
+                  <input
+                    type="file"
+                    ref={carouselInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleCarouselImageAdd}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => carouselInputRef.current?.click()}
+                    disabled={uploadingCarousel}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm ${
+                      uploadingCarousel
+                        ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                        : 'bg-gold text-navy hover:bg-gold-light'
+                    }`}
+                  >
+                    {uploadingCarousel ? (
+                      'Uploading...'
+                    ) : (
+                      <>
+                        <Plus size={14} />
+                        Add Carousel Image
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Save Button */}
+          <div className="pt-4 border-t border-gray-200 flex justify-end">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors ${
+                saveSuccess 
+                  ? 'bg-green-500 text-white'
+                  : saving
+                    ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                    : 'bg-gold text-navy hover:bg-gold-light'
+              }`}
+            >
+              {saveSuccess ? (
+                <><CheckCircle size={18} /> Saved!</>
+              ) : saving ? (
+                'Saving...'
+              ) : (
+                <><Save size={18} /> Save Ministry</>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Staff Card Component with expand/collapse
 function StaffCard({
   person,
@@ -510,6 +783,52 @@ export default function AdminDashboard() {
     ))
   }
 
+  const handleMinistryImageUpload = async (index: number, file: File) => {
+    const fileName = `ministry-${Date.now()}.${file.name.split('.').pop()}`
+    const url = await uploadImage(file, fileName)
+    
+    if (url) {
+      setMinistries(prev => prev.map((m, i) => 
+        i === index ? { ...m, image_url: url } : m
+      ))
+    }
+  }
+
+  const handleMinistryCarouselToggle = (index: number, enabled: boolean) => {
+    setMinistries(prev => prev.map((m, i) => 
+      i === index ? { ...m, carousel_enabled: enabled, carousel_images: enabled ? (m.carousel_images || []) : [] } : m
+    ))
+  }
+
+  const handleMinistryCarouselImageAdd = async (index: number, file: File) => {
+    const fileName = `ministry-carousel-${Date.now()}.${file.name.split('.').pop()}`
+    const url = await uploadImage(file, fileName)
+    
+    if (url) {
+      setMinistries(prev => prev.map((m, i) => {
+        if (i === index) {
+          const currentImages = m.carousel_images || []
+          return { ...m, carousel_images: [...currentImages, url] }
+        }
+        return m
+      }))
+    }
+  }
+
+  const handleMinistryCarouselImageRemove = (index: number, imageIndex: number) => {
+    setMinistries(prev => prev.map((m, i) => {
+      if (i === index && m.carousel_images) {
+        return { ...m, carousel_images: m.carousel_images.filter((_, imgIdx) => imgIdx !== imageIndex) }
+      }
+      return m
+    }))
+  }
+
+  const handleSaveMinistry = async (index: number) => {
+    const ministry = ministries[index]
+    await updateMinistry(ministry)
+  }
+
   const saveChanges = async () => {
     setSaving(true)
     setSaveStatus('idle')
@@ -848,28 +1167,27 @@ export default function AdminDashboard() {
                 <div className="space-y-6">
                   <h2 className="font-cinzel text-xl text-navy border-b pb-3">Ministries</h2>
                   
-                  {ministries.map((ministry, index) => (
-                    <div key={ministry.id} className="p-4 bg-gray-50 rounded-lg space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Ministry Name</label>
-                        <input
-                          type="text"
-                          value={ministry.title}
-                          onChange={(e) => handleMinistryChange(index, 'title', e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <RichTextEditor
-                          value={ministry.description}
-                          onChange={(value) => handleMinistryChange(index, 'description', value)}
-                          placeholder="Describe this ministry..."
-                          rows={4}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-blue-800 text-sm">
+                      <strong>Tip:</strong> Upload a main image for each ministry. You can also enable a carousel to show multiple images that visitors can browse through on the ministries page.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {ministries.map((ministry, index) => (
+                      <MinistryCard
+                        key={ministry.id}
+                        ministry={ministry}
+                        index={index}
+                        onChange={handleMinistryChange}
+                        onImageUpload={handleMinistryImageUpload}
+                        onCarouselToggle={handleMinistryCarouselToggle}
+                        onCarouselImageAdd={handleMinistryCarouselImageAdd}
+                        onCarouselImageRemove={handleMinistryCarouselImageRemove}
+                        onSave={handleSaveMinistry}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
 

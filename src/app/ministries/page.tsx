@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Users, BookOpen, Music, Globe, Heart, LucideIcon } from 'lucide-react'
+import Image from 'next/image'
+import { Users, BookOpen, Music, Globe, Heart, LucideIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getMinistries, defaultMinistries, Ministry } from '@/lib/content'
 
 // Icon mapping
@@ -12,6 +13,69 @@ const iconMap: Record<string, LucideIcon> = {
   music: Music,
   globe: Globe,
   heart: Heart,
+}
+
+// Carousel Component
+function ImageCarousel({ images }: { images: string[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % images.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)
+  }
+
+  if (!images || images.length === 0) return null
+
+  return (
+    <div className="relative w-full h-64 md:h-80 bg-gray-200 rounded-lg overflow-hidden group">
+      {/* Main Image */}
+      <Image
+        src={images[currentIndex]}
+        alt={`Slide ${currentIndex + 1}`}
+        fill
+        className="object-cover"
+      />
+
+      {/* Navigation Arrows */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+            aria-label="Previous image"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+            aria-label="Next image"
+          >
+            <ChevronRight size={24} />
+          </button>
+        </>
+      )}
+
+      {/* Dots Indicator */}
+      {images.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                index === currentIndex ? 'bg-white w-6' : 'bg-white/50'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function MinistriesPage() {
@@ -104,19 +168,42 @@ export default function MinistriesPage() {
           ) : (
             ministries.map((ministry, index) => {
               const IconComponent = getIcon(ministry.icon)
+              const hasCarousel = ministry.carousel_enabled && ministry.carousel_images && ministry.carousel_images.length > 0
+              
               return (
                 <div 
                   key={ministry.id || index} 
-                  className={`flex flex-col md:flex-row items-start gap-6 p-8 rounded-lg fade-in ${
+                  className={`rounded-lg fade-in overflow-hidden ${
                     index % 2 === 0 ? 'bg-white' : 'bg-cream-dark'
                   }`}
                 >
-                  <div className="w-20 h-20 bg-navy rounded-full flex items-center justify-center flex-shrink-0">
-                    <IconComponent className="text-gold" size={36} />
-                  </div>
-                  <div>
-                    <h2 className="font-cinzel text-2xl text-navy mb-3">{ministry.title}</h2>
-                    {renderDescription(ministry.description)}
+                  {/* Carousel or Main Image */}
+                  {hasCarousel ? (
+                    <ImageCarousel images={ministry.carousel_images!} />
+                  ) : ministry.image_url ? (
+                    <div className="w-full h-64 md:h-80 relative">
+                      <Image
+                        src={ministry.image_url}
+                        alt={ministry.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : null}
+
+                  {/* Content */}
+                  <div className="flex flex-col md:flex-row items-start gap-6 p-8">
+                    {/* Icon (only show if no image) */}
+                    {!ministry.image_url && (
+                      <div className="w-20 h-20 bg-navy rounded-full flex items-center justify-center flex-shrink-0">
+                        <IconComponent className="text-gold" size={36} />
+                      </div>
+                    )}
+                    
+                    <div className="flex-1">
+                      <h2 className="font-cinzel text-2xl text-navy mb-3">{ministry.title}</h2>
+                      {renderDescription(ministry.description)}
+                    </div>
                   </div>
                 </div>
               )
