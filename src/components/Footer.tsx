@@ -90,6 +90,12 @@ export default function Footer() {
           <p className="text-gray-400 text-sm">
             © {new Date().getFullYear()} Victory Bible Baptist Church. All rights reserved.
           </p>
+          <Link 
+            href="/admin" 
+            className="text-gray-500 hover:text-gold transition-colors text-xs mt-2 inline-block"
+          >
+            Admin Login
+          </Link>
         </div>
       </div>
     </footer>
