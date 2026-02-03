@@ -1,37 +1,73 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Heart } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Heart, Gift, CreditCard, Repeat, Shield, ExternalLink } from 'lucide-react'
+import { getAllContent, defaultContent } from '@/lib/content'
 
 export default function GivingPage() {
-  const [scriptLoaded, setScriptLoaded] = useState(false)
+  const [content, setContent] = useState<Record<string, string>>(defaultContent)
+  const [isLoading, setIsLoading] = useState(true)
+  const [debugInfo, setDebugInfo] = useState<string>('')
 
   useEffect(() => {
-    // Check if script is already loaded
-    if (typeof window !== 'undefined' && (window as any).tithelyGive) {
-      setScriptLoaded(true)
-      return
+    const loadContent = async () => {
+      console.log('Loading giving page content...')
+      const data = await getAllContent()
+      console.log('Giving settings loaded:', {
+        giving_enabled: data.giving_enabled,
+        tithely_form_id: data.tithely_form_id,
+        tithely_church_id: data.tithely_church_id
+      })
+      setContent(data)
+      setDebugInfo(JSON.stringify({
+        giving_enabled: data.giving_enabled,
+        tithely_form_id: data.tithely_form_id,
+        tithely_church_id: data.tithely_church_id,
+        has_form_id: !!data.tithely_form_id,
+        has_church_id: !!data.tithely_church_id
+      }, null, 2))
+      setIsLoading(false)
     }
-
-    // Load the Tithely script if not already loaded
-    const script = document.createElement('script')
-    script.src = 'https://static.tithely.com/give/give.js'
-    script.async = true
-    script.onload = () => {
-      setScriptLoaded(true)
-    }
-    document.body.appendChild(script)
-
-    return () => {
-      // Cleanup if needed
-      if (script.parentNode) {
-        script.parentNode.removeChild(script)
-      }
-    }
+    loadContent()
   }, [])
+
+  const tithelyFormId = content.tithely_form_id || ''
+  const tithelyChurchId = content.tithely_church_id || ''
+  const givingEnabled = content.giving_enabled === 'true'
+  const givingMessage = content.giving_message || 'Your generous giving supports our church ministries, missions, and community outreach. Thank you for partnering with us to share the love of Christ.'
+
+  // Build the Tithe.ly embed URL
+  const tithelyUrl = tithelyFormId 
+    ? `https://give.tithe.ly/?formId=${tithelyFormId}`
+    : tithelyChurchId 
+    ? `https://tithe.ly/give?c=${tithelyChurchId}`
+    : ''
+
+  console.log('Render state:', { givingEnabled, tithelyUrl, tithelyFormId, tithelyChurchId })
+
+  if (isLoading) {
+    return (
+      <main className="pt-20 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading giving information...</p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="pt-20">
+      {/* Debug Info - Remove this in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-yellow-50 border border-yellow-200 p-4 mx-4 my-4 rounded">
+          <details>
+            <summary className="cursor-pointer font-semibold text-yellow-800">Debug Info (Dev Only)</summary>
+            <pre className="text-xs mt-2 text-yellow-900 overflow-auto">{debugInfo}</pre>
+          </details>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-navy via-navy to-navy-light py-20 overflow-hidden">
         {/* Background Pattern */}
@@ -49,60 +85,99 @@ export default function GivingPage() {
             Give to VBBC
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Your generous giving supports our church ministries, missions, and community outreach. Thank you for partnering with us to share the love of Christ.
+            {givingMessage}
           </p>
         </div>
       </section>
 
-      {/* Giving Button Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="font-cinzel text-3xl text-navy mb-6">
-            Give Online Securely
-          </h2>
-          <p className="text-gray-600 mb-10 max-w-2xl mx-auto">
-            Click the button below to give securely through our online giving platform. You can make a one-time gift or set up recurring donations.
-          </p>
-          
-          {/* Tithely Give Button */}
-          <div className="flex justify-center">
-            {scriptLoaded ? (
-              <button 
-                className="tithely-give-button hover:opacity-90 transition-opacity shadow-lg hover:shadow-xl"
-                data-form="b52c1053-6865-11ee-90fc-1260ab546d11"
-                style={{
-                  backgroundColor: '#00DB72',
-                  fontFamily: 'inherit',
-                  fontWeight: 'bold',
-                  fontSize: '19px',
-                  padding: '15px 70px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  backgroundImage: 'none',
-                  color: 'white',
-                  textShadow: 'none',
-                  display: 'inline-block',
-                  float: 'none' as any,
-                  border: 'none'
-                }}
-              >
-                Give
-              </button>
-            ) : (
-              <div className="inline-flex items-center justify-center" style={{
-                backgroundColor: '#00DB72',
-                fontFamily: 'inherit',
-                fontWeight: 'bold',
-                fontSize: '19px',
-                padding: '15px 70px',
-                borderRadius: '4px',
-                color: 'white',
-                opacity: 0.7
-              }}>
-                Loading...
+      {/* Giving Options */}
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          {/* Feature Cards */}
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="text-center p-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-navy/10 rounded-full mb-4">
+                <CreditCard className="w-8 h-8 text-navy" />
               </div>
-            )}
+              <h3 className="font-cinzel text-lg text-navy mb-2">One-Time Gift</h3>
+              <p className="text-gray-600 text-sm">
+                Give a single donation to support our church ministries and missions.
+              </p>
+            </div>
+            
+            <div className="text-center p-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-navy/10 rounded-full mb-4">
+                <Repeat className="w-8 h-8 text-navy" />
+              </div>
+              <h3 className="font-cinzel text-lg text-navy mb-2">Recurring Giving</h3>
+              <p className="text-gray-600 text-sm">
+                Set up automatic recurring donations weekly, bi-weekly, or monthly.
+              </p>
+            </div>
+            
+            <div className="text-center p-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-navy/10 rounded-full mb-4">
+                <Shield className="w-8 h-8 text-navy" />
+              </div>
+              <h3 className="font-cinzel text-lg text-navy mb-2">Secure & Safe</h3>
+              <p className="text-gray-600 text-sm">
+                Your information is protected with bank-level security through Tithe.ly.
+              </p>
+            </div>
           </div>
+
+          {/* Tithe.ly Embed or Setup Message */}
+          {givingEnabled && tithelyUrl ? (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-gray-50 rounded-2xl overflow-hidden shadow-lg">
+                <iframe
+                  src={tithelyUrl}
+                  width="100%"
+                  height="700"
+                  frameBorder="0"
+                  className="w-full"
+                  title="Give to Victory Bible Baptist Church"
+                  allow="payment"
+                />
+              </div>
+              <p className="text-center text-sm text-gray-500 mt-4 flex items-center justify-center gap-2">
+                <Shield size={14} />
+                Powered by Tithe.ly - Secure, encrypted giving
+              </p>
+            </div>
+          ) : (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-gray-50 rounded-2xl p-12 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gold/20 rounded-full mb-6">
+                  <Gift className="w-10 h-10 text-gold" />
+                </div>
+                <h2 className="font-cinzel text-2xl text-navy mb-4">
+                  Online Giving Coming Soon
+                </h2>
+                <p className="text-gray-600 mb-8">
+                  We are setting up our online giving platform. In the meantime, you can give during our services or mail your donation to the church.
+                </p>
+                
+                <div className="bg-white rounded-xl p-6 text-left">
+                  <h3 className="font-cinzel text-lg text-navy mb-4">Other Ways to Give</h3>
+                  <ul className="space-y-3 text-gray-600">
+                    <li className="flex items-start gap-3">
+                      <span className="w-6 h-6 bg-gold/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-gold text-sm font-bold">1</span>
+                      </span>
+                      <span><strong>In Person:</strong> During any of our worship services</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="w-6 h-6 bg-gold/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-gold text-sm font-bold">2</span>
+                      </span>
+                      <span><strong>By Mail:</strong> {content.church_address}, {content.church_city}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -116,34 +191,39 @@ export default function GivingPage() {
         </div>
       </section>
 
-      {/* Other Ways to Give */}
+      {/* FAQ Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4">
           <h2 className="font-cinzel text-3xl text-navy text-center mb-12">
-            Other Ways to Give
+            Frequently Asked Questions
           </h2>
           
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-navy/10 rounded-full mb-4">
-                <span className="text-2xl font-bold text-navy">1</span>
-              </div>
-              <h3 className="font-cinzel text-xl text-navy mb-3">In Person</h3>
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="font-cinzel text-lg text-navy mb-2">Is online giving secure?</h3>
               <p className="text-gray-600">
-                Give during any of our worship services. Offering boxes are available as you enter or exit the sanctuary.
+                Yes! We use Tithe.ly, a trusted platform used by thousands of churches. All transactions are encrypted with bank-level security, and your personal information is never shared.
               </p>
             </div>
             
-            <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-navy/10 rounded-full mb-4">
-                <span className="text-2xl font-bold text-navy">2</span>
-              </div>
-              <h3 className="font-cinzel text-xl text-navy mb-3">By Mail</h3>
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="font-cinzel text-lg text-navy mb-2">Can I set up recurring donations?</h3>
               <p className="text-gray-600">
-                Mail your donation to:<br />
-                <strong className="text-navy">Victory Bible Baptist Church</strong><br />
-                1401 Old Lexington Hwy<br />
-                Chapin, SC 29036
+                Absolutely! You can set up automatic recurring gifts on a weekly, bi-weekly, or monthly basis. You can modify or cancel your recurring gift at any time through your Tithe.ly account.
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="font-cinzel text-lg text-navy mb-2">Will I receive a giving statement?</h3>
+              <p className="text-gray-600">
+                Yes, you will receive an email receipt for each donation. At the end of the year, you can also access a complete giving statement through your Tithe.ly account for tax purposes.
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="font-cinzel text-lg text-navy mb-2">What payment methods are accepted?</h3>
+              <p className="text-gray-600">
+                We accept credit cards, debit cards, and bank transfers (ACH). You can also give using Apple Pay or Google Pay on supported devices.
               </p>
             </div>
           </div>
@@ -154,9 +234,9 @@ export default function GivingPage() {
       <section className="py-12 bg-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <p className="text-gray-600">
-            Have questions about giving?{' '}
-            <a href="/contact" className="text-gold hover:underline font-semibold">
-              Contact us
+            Have questions about giving? Contact us at{' '}
+            <a href={`tel:${content.church_phone}`} className="text-gold hover:underline">
+              {content.church_phone}
             </a>
             {' '}or visit us during service times.
           </p>
