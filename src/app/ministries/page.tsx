@@ -85,6 +85,16 @@ export default function MinistriesPage() {
   useEffect(() => {
     const loadMinistries = async () => {
       const data = await getMinistries()
+      console.log('=== MINISTRIES DEBUG ====')
+      console.log('Total ministries loaded:', data.length)
+      data.forEach((m, i) => {
+        console.log(`\n${i+1}. ${m.title}`)
+        console.log('   ID:', m.id)
+        console.log('   Has image_url:', !!m.image_url)
+        console.log('   Image URL:', m.image_url || '(empty)')
+        console.log('   Carousel enabled:', m.carousel_enabled)
+        console.log('   Carousel images:', m.carousel_images?.length || 0)
+      })
       setMinistries(data)
       setIsLoading(false)
     }

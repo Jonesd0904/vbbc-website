@@ -117,11 +117,14 @@ export const defaultMinistries: Ministry[] = [
 // Image upload function
 export async function uploadImage(file: File, path: string): Promise<string | null> {
   if (!isSupabaseConfigured || !supabase) {
-    console.log('Supabase not configured - cannot upload images')
+    console.error('❌ Supabase not configured - cannot upload images')
     return null
   }
   
   try {
+    console.log('📸 Uploading image:', file.name, '(', Math.round(file.size / 1024), 'KB)')
+    console.log('   Path:', path)
+    
     // Remove old file if exists
     await supabase.storage.from('images').remove([path])
     
@@ -134,7 +137,7 @@ export async function uploadImage(file: File, path: string): Promise<string | nu
       })
     
     if (error) {
-      console.error('Error uploading image:', error)
+      console.error('❌ Error uploading image:', error)
       return null
     }
     
@@ -143,9 +146,11 @@ export async function uploadImage(file: File, path: string): Promise<string | nu
       .from('images')
       .getPublicUrl(path)
     
+    console.log('✅ Image uploaded successfully!')
+    console.log('   URL:', publicUrl)
     return publicUrl
   } catch (error) {
-    console.error('Error uploading image:', error)
+    console.error('❌ Error uploading image:', error)
     return null
   }
 }
@@ -368,16 +373,29 @@ export async function getMinistries(): Promise<Ministry[]> {
 
 export async function updateMinistry(ministry: Ministry): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) {
+    console.error('❌ Supabase not configured - ministry changes will not be saved')
     return false
   }
   
   try {
+    console.log('💾 Saving ministry:', ministry.title)
+    console.log('   Image URL:', ministry.image_url || '(none)')
+    console.log('   Carousel enabled:', ministry.carousel_enabled)
+    console.log('   Carousel images:', ministry.carousel_images?.length || 0)
+    
     const { error } = await supabase
       .from('ministries')
       .upsert(ministry)
     
-    return !error
-  } catch {
+    if (error) {
+      console.error('❌ Error saving ministry:', error)
+      return false
+    }
+    
+    console.log('✅ Ministry saved successfully!')
+    return true
+  } catch (e) {
+    console.error('❌ Exception saving ministry:', e)
     return false
   }
 }
