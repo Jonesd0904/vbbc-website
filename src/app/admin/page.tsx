@@ -169,6 +169,7 @@ function MinistryCard({
   index,
   onChange,
   onImageUpload,
+  onImageDelete,
   onCarouselToggle,
   onCarouselImageAdd,
   onCarouselImageRemove,
@@ -178,6 +179,7 @@ function MinistryCard({
   index: number
   onChange: (index: number, field: keyof Ministry, value: string) => void
   onImageUpload: (index: number, file: File) => Promise<void>
+  onImageDelete: (index: number) => void
   onCarouselToggle: (index: number, enabled: boolean) => void
   onCarouselImageAdd: (index: number, file: File) => Promise<void>
   onCarouselImageRemove: (index: number, imageIndex: number) => void
@@ -294,9 +296,19 @@ function MinistryCard({
           <div className="border-t pt-4">
             <label className="block text-sm font-medium text-gray-700 mb-3">Ministry Image</label>
             <div className="flex items-start gap-4">
-              <div className="w-32 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 relative">
+              <div className="w-32 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 relative group">
                 {ministry.image_url ? (
-                  <Image src={ministry.image_url} alt={ministry.title} fill className="object-cover" />
+                  <>
+                    <Image src={ministry.image_url} alt={ministry.title} fill className="object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => onImageDelete(index)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Delete image"
+                    >
+                      <X size={14} />
+                    </button>
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
                     <ImageIcon size={32} />
@@ -794,6 +806,12 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleMinistryImageDelete = (index: number) => {
+    setMinistries(prev => prev.map((m, i) => 
+      i === index ? { ...m, image_url: '' } : m
+    ))
+  }
+
   const handleMinistryCarouselToggle = (index: number, enabled: boolean) => {
     setMinistries(prev => prev.map((m, i) => 
       i === index ? { ...m, carousel_enabled: enabled, carousel_images: enabled ? (m.carousel_images || []) : [] } : m
@@ -1181,6 +1199,7 @@ export default function AdminDashboard() {
                         index={index}
                         onChange={handleMinistryChange}
                         onImageUpload={handleMinistryImageUpload}
+                        onImageDelete={handleMinistryImageDelete}
                         onCarouselToggle={handleMinistryCarouselToggle}
                         onCarouselImageAdd={handleMinistryCarouselImageAdd}
                         onCarouselImageRemove={handleMinistryCarouselImageRemove}
