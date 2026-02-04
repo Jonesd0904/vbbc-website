@@ -194,7 +194,7 @@ export default function MinistriesPage() {
                   ) : hasMainImage ? (
                     <div className="w-full h-64 md:h-80 relative">
                       <Image
-                        src={ministry.image_url}
+                        src={ministry.image_url!}
                         alt={ministry.title}
                         fill
                         className="object-cover"
