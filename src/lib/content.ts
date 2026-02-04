@@ -107,11 +107,11 @@ export const defaultStaff: StaffMember[] = [
 ]
 
 export const defaultMinistries: Ministry[] = [
-  { id: '1', title: "Children's Ministry", description: 'Building a foundation of faith for the next generation through Bible teaching and fun activities.', icon: 'users', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 1 },
-  { id: '2', title: 'Youth Ministry', description: 'Equipping teens to stand firm in their faith and become leaders for Christ.', icon: 'users', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 2 },
-  { id: '3', title: 'Adult Bible Study', description: 'Deep dives into God\'s Word for spiritual growth and practical application.', icon: 'book', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 3 },
-  { id: '4', title: 'Music Ministry', description: 'Glorifying God through traditional hymns and Christ-honoring music.', icon: 'music', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 4 },
-  { id: '5', title: 'Outreach & Missions', description: 'Reaching the world with the Gospel of Jesus Christ.', icon: 'globe', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 5 },
+  { id: 'a0000000-0000-0000-0000-000000000001', title: "Children's Ministry", description: 'Building a foundation of faith for the next generation through Bible teaching and fun activities.', icon: 'users', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 1 },
+  { id: 'a0000000-0000-0000-0000-000000000002', title: 'Youth Ministry', description: 'Equipping teens to stand firm in their faith and become leaders for Christ.', icon: 'users', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 2 },
+  { id: 'a0000000-0000-0000-0000-000000000003', title: 'Adult Bible Study', description: 'Deep dives into God\'s Word for spiritual growth and practical application.', icon: 'book', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 3 },
+  { id: 'a0000000-0000-0000-0000-000000000004', title: 'Music Ministry', description: 'Glorifying God through traditional hymns and Christ-honoring music.', icon: 'music', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 4 },
+  { id: 'a0000000-0000-0000-0000-000000000005', title: 'Outreach & Missions', description: 'Reaching the world with the Gospel of Jesus Christ.', icon: 'globe', image_url: '', carousel_enabled: false, carousel_images: [], order_index: 5 },
 ]
 
 // Image upload function
