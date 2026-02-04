@@ -169,6 +169,7 @@ export default function MinistriesPage() {
             ministries.map((ministry, index) => {
               const IconComponent = getIcon(ministry.icon)
               const hasCarousel = ministry.carousel_enabled && ministry.carousel_images && ministry.carousel_images.length > 0
+              const hasMainImage = ministry.image_url && ministry.image_url.trim() !== ''
               
               return (
                 <div 
@@ -180,7 +181,7 @@ export default function MinistriesPage() {
                   {/* Carousel or Main Image */}
                   {hasCarousel ? (
                     <ImageCarousel images={ministry.carousel_images!} />
-                  ) : ministry.image_url ? (
+                  ) : hasMainImage ? (
                     <div className="w-full h-64 md:h-80 relative">
                       <Image
                         src={ministry.image_url}
@@ -194,7 +195,7 @@ export default function MinistriesPage() {
                   {/* Content */}
                   <div className="flex flex-col md:flex-row items-start gap-6 p-8">
                     {/* Icon (only show if no image) */}
-                    {!ministry.image_url && (
+                    {!hasMainImage && !hasCarousel && (
                       <div className="w-20 h-20 bg-navy rounded-full flex items-center justify-center flex-shrink-0">
                         <IconComponent className="text-gold" size={36} />
                       </div>
