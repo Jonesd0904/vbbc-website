@@ -6,7 +6,7 @@ import { Sun, Moon, BookOpen, Facebook, Youtube, Instagram, Radio, CalendarDays 
 const FACEBOOK_PAGE_URL = 'https://www.facebook.com/profile.php?id=100064556957430'
 const FACEBOOK_PAGE_ID = '100064556957430'
 
-function FacebookPlaceholder() {
+function FacebookPlaceholder({ onLoad }: { onLoad: () => void }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-gradient-to-br from-navy-dark via-navy to-navy-light">
       {/* Pulsing radio icon */}
@@ -17,9 +17,9 @@ function FacebookPlaceholder() {
         </div>
       </div>
 
-      <h3 className="font-cinzel text-white text-2xl mb-2">We're Not Live Right Now</h3>
+      <h3 className="font-cinzel text-white text-2xl mb-2">Join Us Live</h3>
       <p className="font-lora text-gray-300 text-sm mb-6 max-w-sm leading-relaxed">
-        Join us during one of our regular service times to watch live, or visit our Facebook page to catch up on past services.
+        We stream all our regular services. Click below to load the live stream, or visit us on Facebook directly.
       </p>
 
       {/* Service time pills */}
@@ -36,22 +36,33 @@ function FacebookPlaceholder() {
         ))}
       </div>
 
-      <a
-        href={FACEBOOK_PAGE_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-2 bg-[#1877f2] text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity font-cinzel text-sm"
-      >
-        <Facebook size={16} />
-        Watch on Facebook
-      </a>
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        {/* Primary: load embed on page */}
+        <button
+          onClick={onLoad}
+          className="flex items-center gap-2 bg-gold text-white px-6 py-3 rounded-lg hover:bg-gold/80 transition-colors font-cinzel text-sm"
+        >
+          <Radio size={16} />
+          Load Live Stream
+        </button>
+        {/* Fallback: open Facebook directly */}
+        <a
+          href={FACEBOOK_PAGE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 bg-[#1877f2] text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity font-cinzel text-sm"
+        >
+          <Facebook size={16} />
+          Open on Facebook
+        </a>
+      </div>
     </div>
   )
 }
 
 export default function LivestreamPage() {
   const [activeTab, setActiveTab] = useState<'facebook' | 'youtube'>('facebook')
-  const [fbLoaded, setFbLoaded] = useState(false)
+  const [streamLoaded, setStreamLoaded] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -112,28 +123,40 @@ export default function LivestreamPage() {
           <div className="fade-in">
             {activeTab === 'facebook' ? (
               <div>
-                {/* Wrapper: placeholder sits behind, iframe on top */}
                 <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg">
-                  {/* Placeholder — always rendered, visible when iframe is blank */}
-                  <FacebookPlaceholder />
-
-                  {/* Facebook iframe — covers placeholder when a live/recent video loads */}
-                  <iframe
-                    key="fb-live"
-                    src={`https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D${FACEBOOK_PAGE_ID}&show_text=false&width=720&height=405&appId`}
-                    width="100%"
-                    height="100%"
-                    className="absolute inset-0 z-10"
-                    style={{ border: 'none', overflow: 'hidden' }}
-                    allowFullScreen
-                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                    onLoad={() => setFbLoaded(true)}
-                  />
+                  {/* Placeholder shown until user clicks Load */}
+                  {!streamLoaded && (
+                    <FacebookPlaceholder onLoad={() => setStreamLoaded(true)} />
+                  )}
+                  {/* Iframe only rendered after user clicks Load */}
+                  {streamLoaded && (
+                    <iframe
+                      src={`https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D${FACEBOOK_PAGE_ID}&show_text=false&width=720&height=405&appId`}
+                      width="100%"
+                      height="100%"
+                      className="absolute inset-0"
+                      style={{ border: 'none', overflow: 'hidden' }}
+                      allowFullScreen
+                      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                    />
+                  )}
                 </div>
-
-                <p className="mt-3 text-center text-gray-400 text-xs">
-                  Live stream appears automatically above during service times.
-                </p>
+                {/* Always-visible fallback link once stream is loaded */}
+                {streamLoaded && (
+                  <div className="mt-3 text-center">
+                    <p className="text-gray-400 text-xs">
+                      Stream not showing?{' '}
+                      <a
+                        href={FACEBOOK_PAGE_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#1877f2] hover:underline"
+                      >
+                        Watch directly on Facebook →
+                      </a>
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <div>
