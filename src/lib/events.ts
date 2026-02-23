@@ -4,8 +4,8 @@ export interface Event {
   id: string
   title: string
   description: string
-  date?: string | null  // null = "coming soon" announcement
-  end_date?: string
+  date?: string | null
+  end_date?: string | null
   image_url: string
   category: 'service' | 'conference' | 'ministry' | 'community' | 'other'
   location?: string
