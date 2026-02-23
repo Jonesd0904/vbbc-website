@@ -66,6 +66,7 @@ function sameDay(a: Date, b: Date) {
 function groupByMonth(events: Event[]): Map<string, Event[]> {
   const map = new Map<string, Event[]>()
   events.forEach((ev) => {
+    if (!ev.date) return // coming-soon events handled separately
     const d = new Date(ev.date)
     const key = `${d.getFullYear()}-${d.getMonth()}`
     if (!map.has(key)) map.set(key, [])
