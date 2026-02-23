@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, GraduationCap } from 'lucide-react'
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -37,7 +37,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-6">
+          <div className="hidden lg:flex items-center space-x-5">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -47,6 +47,16 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            {/* School Link - Highlighted */}
+            <a
+              href="https://victorybiblebaptist.org/Victory_Bible_Christian_School.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 font-lora text-sm bg-gold text-white px-3 py-1.5 rounded-md hover:bg-gold/80 transition-colors duration-300 whitespace-nowrap"
+            >
+              <GraduationCap size={15} />
+              VBCS
+            </a>
           </div>
 
           {/* Mobile menu button */}
@@ -73,6 +83,17 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            {/* School Link - Mobile */}
+            <a
+              href="https://victorybiblebaptist.org/Victory_Bible_Christian_School.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 font-lora text-white bg-gold px-4 py-2 rounded-md hover:bg-gold/80 transition-colors duration-300 w-fit"
+              onClick={() => setIsOpen(false)}
+            >
+              <GraduationCap size={16} />
+              Victory Bible Christian School
+            </a>
           </div>
         </div>
       )}

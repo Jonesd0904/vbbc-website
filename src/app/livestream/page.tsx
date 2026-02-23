@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Sun, Moon, BookOpen, Facebook, Youtube } from 'lucide-react'
+import { Sun, Moon, BookOpen, Facebook, Youtube, Instagram } from 'lucide-react'
+
+const FACEBOOK_PAGE_URL = 'https://www.facebook.com/profile.php?id=100064556957430'
+const FACEBOOK_PAGE_ID = '100064556957430'
 
 export default function LivestreamPage() {
   const [activeTab, setActiveTab] = useState<'facebook' | 'youtube'>('facebook')
@@ -69,32 +72,38 @@ export default function LivestreamPage() {
 
           {/* Video Embed */}
           <div className="fade-in">
-            <div className="aspect-video bg-navy rounded-xl overflow-hidden shadow-lg">
-              {activeTab === 'facebook' ? (
-                <div className="w-full h-full">
-                  {/* Facebook Page Plugin - Replace PAGE_URL with your church's Facebook page */}
+            {activeTab === 'facebook' ? (
+              <div>
+                {/* Facebook Live Embed */}
+                <div className="aspect-video bg-navy rounded-xl overflow-hidden shadow-lg">
                   <iframe
-                    src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Ffacebook%2Fvideos%2F10153231379946729%2F&show_text=false&width=560&t=0"
+                    src={`https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D${FACEBOOK_PAGE_ID}&show_text=false&width=560&height=314&appId`}
                     width="100%"
                     height="100%"
                     style={{ border: 'none', overflow: 'hidden' }}
                     allowFullScreen
                     allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                  ></iframe>
-                  {/* 
-                    To embed your Facebook Live:
-                    1. Go to your Facebook page
-                    2. Find the live video or page
-                    3. Click Share > Embed
-                    4. Copy the iframe code and replace the one above
-                    
-                    Or use the Facebook Page Plugin:
-                    https://developers.facebook.com/docs/plugins/page-plugin/
-                  */}
+                  />
                 </div>
-              ) : (
-                <div className="w-full h-full">
-                  {/* YouTube Embed - Replace VIDEO_ID with your channel's live stream or video ID */}
+                {/* Not Live Fallback */}
+                <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <p className="text-gray-500 text-sm text-center">
+                    If no video appears, the service may not be live yet — check back at service time, or watch on Facebook directly.
+                  </p>
+                  <a
+                    href={FACEBOOK_PAGE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-[#1877f2] text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap text-sm font-cinzel"
+                  >
+                    <Facebook size={16} />
+                    Open on Facebook
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="aspect-video bg-navy rounded-xl overflow-hidden shadow-lg">
                   <iframe
                     width="100%"
                     height="100%"
@@ -103,27 +112,16 @@ export default function LivestreamPage() {
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
-                  ></iframe>
-                  {/*
-                    To embed your YouTube Live:
-                    1. Go to your YouTube channel
-                    2. Click on "Live" or find your live stream
-                    3. Click Share > Embed
-                    4. Copy the iframe code and replace the one above
-                    
-                    For channel live stream, replace YOUR_CHANNEL_ID with your actual channel ID
-                  */}
+                  />
                 </div>
-              )}
-            </div>
-            
-            {/* Placeholder message when not live */}
-            <div className="mt-4 text-center">
-              <p className="text-gray-500 text-sm">
-                If you don't see a video above, the livestream may not be active. 
-                Check back during our regular service times.
-              </p>
-            </div>
+                <div className="mt-4 text-center">
+                  <p className="text-gray-500 text-sm">
+                    If you don't see a video above, the livestream may not be active. 
+                    Check back during our regular service times.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -155,15 +153,25 @@ export default function LivestreamPage() {
       <section className="py-12 bg-cream">
         <div className="container-narrow text-center fade-in">
           <h3 className="font-cinzel text-xl text-navy mb-6">Follow Us for Updates</h3>
-          <div className="flex justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-4">
             <a
-              href="https://facebook.com/YOUR_PAGE"
+              href={FACEBOOK_PAGE_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-[#1877f2] text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity"
             >
               <Facebook size={20} />
               Facebook
+            </a>
+            <a
+              href="https://www.instagram.com/victorybiblebaptistirmo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity"
+              style={{ background: 'radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%)' }}
+            >
+              <Instagram size={20} />
+              Instagram
             </a>
             <a
               href="https://youtube.com/YOUR_CHANNEL"

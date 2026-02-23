@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Phone, Clock, Facebook, Youtube } from 'lucide-react'
+import { MapPin, Phone, Clock, Facebook, Youtube, Instagram, GraduationCap } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -20,8 +20,11 @@ export default function Footer() {
               Living by Faith. Enjoying Victory in Christ.
             </p>
             <div className="flex space-x-4 mt-6">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold transition-colors">
+              <a href="https://www.facebook.com/profile.php?id=100064556957430" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold transition-colors">
                 <Facebook size={24} />
+              </a>
+              <a href="https://www.instagram.com/victorybiblebaptistirmo" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold transition-colors">
+                <Instagram size={24} />
               </a>
               <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold transition-colors">
                 <Youtube size={24} />
@@ -47,6 +50,17 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
+            <div className="mt-4">
+              <a
+                href="https://victorybiblebaptist.org/Victory_Bible_Christian_School.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-gold hover:text-white transition-colors text-sm"
+              >
+                <GraduationCap size={15} />
+                Victory Bible Christian School
+              </a>
+            </div>
           </div>
 
           {/* Service Times */}
