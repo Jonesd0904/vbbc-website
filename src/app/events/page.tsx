@@ -81,7 +81,8 @@ const DESCRIPTION_LIMIT = 120
 function EventCard({ event }: { event: Event }) {
   const catColor = CATEGORY_COLORS[event.category] || CATEGORY_COLORS.other
   const catLabel = CATEGORY_LABELS[event.category] || 'Event'
-  const d = new Date(event.date)
+  const hasDate = !!event.date
+  const d = hasDate ? new Date(event.date!) : null
   const [expanded, setExpanded] = useState(false)
   const isLong = event.description.length > DESCRIPTION_LIMIT
 
@@ -92,15 +93,24 @@ function EventCard({ event }: { event: Event }) {
         className="flex-shrink-0 flex flex-col items-center justify-center w-full sm:w-24 py-5 sm:py-0"
         style={{ backgroundColor: event.color || '#c9a227' }}
       >
-        <span className="font-cinzel text-white/80 text-xs uppercase tracking-widest">
-          {d.toLocaleDateString('en-US', { month: 'short' })}
-        </span>
-        <span className="font-cinzel text-white text-4xl font-bold leading-none">
-          {d.getDate()}
-        </span>
-        <span className="font-cinzel text-white/80 text-xs">
-          {d.toLocaleDateString('en-US', { weekday: 'short' })}
-        </span>
+        {d ? (
+          <>
+            <span className="font-cinzel text-white/80 text-xs uppercase tracking-widest">
+              {d.toLocaleDateString('en-US', { month: 'short' })}
+            </span>
+            <span className="font-cinzel text-white text-4xl font-bold leading-none">
+              {d.getDate()}
+            </span>
+            <span className="font-cinzel text-white/80 text-xs">
+              {d.toLocaleDateString('en-US', { weekday: 'short' })}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="font-cinzel text-white/80 text-xs uppercase tracking-widest">Date</span>
+            <span className="font-cinzel text-white text-lg font-bold leading-tight">TBD</span>
+          </>
+        )}
       </div>
 
       {/* Image (optional) */}
@@ -147,11 +157,18 @@ function EventCard({ event }: { event: Event }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
-          <span className="flex items-center gap-1.5">
-            <Clock size={14} className="text-gold" />
-            {formatTime(event.date)}
-            {event.end_date && ` – ${formatTime(event.end_date)}`}
-          </span>
+          {d ? (
+            <span className="flex items-center gap-1.5">
+              <Clock size={14} className="text-gold" />
+              {formatTime(event.date!)}
+              {event.end_date && ` – ${formatTime(event.end_date)}`}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-amber-600">
+              <Clock size={14} className="text-amber-500" />
+              Date to be announced
+            </span>
+          )}
           {event.location && (
             <span className="flex items-center gap-1.5">
               <MapPin size={14} className="text-gold" />
@@ -179,7 +196,8 @@ function EventCard({ event }: { event: Event }) {
 // ─── Grid Event Card ───────────────────────────────────────────────────────────
 
 function GridEventCard({ event: ev }: { event: Event }) {
-  const d = new Date(ev.date)
+  const hasDate = !!ev.date
+  const d = hasDate ? new Date(ev.date!) : null
   const catColor = CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.other
   const catLabel = CATEGORY_LABELS[ev.category] || 'Event'
   const [expanded, setExpanded] = useState(false)
@@ -198,12 +216,14 @@ function GridEventCard({ event: ev }: { event: Event }) {
         )}
         {/* Date badge */}
         <div className="absolute top-3 left-3 bg-white/95 rounded-lg px-3 py-1.5 text-center shadow-sm">
-          <p className="font-cinzel text-gray-500 text-xs uppercase">
-            {d.toLocaleDateString('en-US', { month: 'short' })}
-          </p>
-          <p className="font-cinzel text-navy text-xl font-bold leading-none">
-            {d.getDate()}
-          </p>
+          {d ? (
+            <>
+              <p className="font-cinzel text-gray-500 text-xs uppercase">{d.toLocaleDateString('en-US', { month: 'short' })}</p>
+              <p className="font-cinzel text-navy text-xl font-bold leading-none">{d.getDate()}</p>
+            </>
+          ) : (
+            <p className="font-cinzel text-navy text-xs font-bold">Coming<br/>Soon</p>
+          )}
         </div>
       </div>
 
@@ -236,7 +256,11 @@ function GridEventCard({ event: ev }: { event: Event }) {
         </div>
 
         <div className="flex flex-col gap-1 text-xs text-gray-400 mt-auto pt-2">
-          <span className="flex items-center gap-1.5"><Clock size={12} className="text-gold" />{formatTime(ev.date)}{ev.end_date && ` – ${formatTime(ev.end_date)}`}</span>
+          {d ? (
+            <span className="flex items-center gap-1.5"><Clock size={12} className="text-gold" />{formatTime(ev.date!)}{ev.end_date && ` – ${formatTime(ev.end_date)}`}</span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-amber-600"><Clock size={12} className="text-amber-500" />Date to be announced</span>
+          )}
           {ev.location && <span className="flex items-center gap-1.5"><MapPin size={12} className="text-gold" />{ev.location}</span>}
         </div>
 
@@ -395,7 +419,9 @@ export default function EventsPage() {
   const categories = ['all', ...Array.from(new Set(events.map((e) => e.category)))]
 
   const filtered = filter === 'all' ? events : events.filter((e) => e.category === filter)
-  const grouped = groupByMonth(filtered)
+  const comingSoon = filtered.filter((e) => !e.date)
+  const withDate = filtered.filter((e) => !!e.date)
+  const grouped = groupByMonth(withDate)
 
   return (
     <>
@@ -504,6 +530,25 @@ export default function EventsPage() {
               {/* Events — List View (grouped by month) */}
               {!loading && filtered.length > 0 && view === 'list' && (
                 <div className="space-y-10 fade-in">
+
+                  {/* Coming Soon section */}
+                  {comingSoon.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-gold/10 border border-gold/30 rounded-lg flex items-center justify-center">
+                          <Clock size={15} className="text-gold" />
+                        </div>
+                        <h2 className="font-cinzel text-navy text-lg">Coming Soon</h2>
+                        <div className="flex-1 h-px bg-gray-200" />
+                      </div>
+                      <div className="space-y-4">
+                        {comingSoon.map((ev) => (
+                          <EventCard key={ev.id} event={ev} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {Array.from(grouped.entries()).map(([key, monthEvents]) => {
                     const [y, m] = key.split('-').map(Number)
                     const label = new Date(y, m, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })

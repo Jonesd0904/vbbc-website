@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Calendar, MapPin, ExternalLink } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Calendar, MapPin, ExternalLink, Clock } from 'lucide-react'
 import { getFeaturedEvent, Event } from '@/lib/events'
 
 export default function EventSpotlight() {
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     async function loadEvent() {
@@ -18,111 +20,100 @@ export default function EventSpotlight() {
     loadEvent()
   }, [])
 
-  if (loading || !event) {
-    return null
-  }
+  if (loading || !event) return null
 
-  const eventDate = new Date(event.date)
-  const formattedDate = eventDate.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
-  const formattedTime = eventDate.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  })
+  const hasDate = !!event.date
+  const eventDate = hasDate ? new Date(event.date!) : null
+  const formattedDate = eventDate
+    ? eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+  const formattedTime = eventDate
+    ? eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    : null
+  const themeColor = event.color || '#c9a227'
 
-  const handleClick = () => {
+  // Whole portal navigates to /events
+  const handlePortalClick = () => router.push('/events')
+
+  // CTA button opens registration URL (or falls back to /events)
+  const handleCtaClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     if (event.registration_url) {
       window.open(event.registration_url, '_blank', 'noopener,noreferrer')
+    } else {
+      router.push('/events')
     }
   }
 
-  const themeColor = event.color || '#c9a227' // Default to gold
-
   return (
-    <div 
+    <div
       className="event-spotlight-container"
-      onClick={handleClick}
-      style={{ cursor: event.registration_url ? 'pointer' : 'default' }}
+      onClick={handlePortalClick}
+      style={{ cursor: 'pointer' }}
+      title="View all events"
     >
-      {/* Pulsating glow effect */}
-      <div 
+      {/* Pulsating glow */}
+      <div
         className="event-spotlight-glow"
-        style={{ 
-          '--glow-color': themeColor,
-          boxShadow: `0 0 40px ${themeColor}40, 0 0 80px ${themeColor}20`
-        } as React.CSSProperties}
+        style={{ '--glow-color': themeColor, boxShadow: `0 0 40px ${themeColor}40, 0 0 80px ${themeColor}20` } as React.CSSProperties}
       />
-      
-      {/* Main circular portal */}
+
+      {/* Portal circle */}
       <div className="event-spotlight-portal">
-        {/* Background image with blur */}
         {event.image_url && (
           <div className="event-spotlight-bg">
-            <Image
-              src={event.image_url}
-              alt={event.title}
-              fill
-              className="object-cover"
-            />
+            <Image src={event.image_url} alt={event.title} fill className="object-cover" />
           </div>
         )}
-        
-        {/* Frosted glass overlay */}
         <div className="event-spotlight-glass" />
-        
-        {/* Content */}
+
         <div className="event-spotlight-content">
-          {/* Date badge */}
-          <div 
-            className="event-date-badge"
-            style={{ backgroundColor: themeColor }}
-          >
-            <Calendar size={14} />
-            <span>{eventDate.getDate()}</span>
-            <span className="text-xs">{eventDate.toLocaleDateString('en-US', { month: 'short' })}</span>
+          {/* Date badge — or "Coming Soon" */}
+          <div className="event-date-badge" style={{ backgroundColor: themeColor }}>
+            {hasDate && eventDate ? (
+              <>
+                <Calendar size={14} />
+                <span>{eventDate.getDate()}</span>
+                <span className="badge-month">{eventDate.toLocaleDateString('en-US', { month: 'short' })}</span>
+              </>
+            ) : (
+              <>
+                <Clock size={14} />
+                <span className="badge-soon">Coming</span>
+                <span className="badge-month">Soon</span>
+              </>
+            )}
           </div>
-          
-          {/* Event details */}
+
           <div className="event-details">
             <h3 className="event-title">{event.title}</h3>
             <p className="event-description">{event.description}</p>
-            
+
             <div className="event-meta">
-              <div className="event-meta-item">
-                <Calendar size={14} />
-                <span>{formattedDate}</span>
-              </div>
-              <div className="event-meta-item">
-                <span>{formattedTime}</span>
-              </div>
+              {hasDate && formattedDate ? (
+                <>
+                  <div className="event-meta-item"><Calendar size={14} /><span>{formattedDate}</span></div>
+                  {formattedTime && <div className="event-meta-item"><span>{formattedTime}</span></div>}
+                </>
+              ) : (
+                <div className="event-meta-item"><Clock size={14} /><span>Date to be announced</span></div>
+              )}
               {event.location && (
-                <div className="event-meta-item">
-                  <MapPin size={14} />
-                  <span>{event.location}</span>
-                </div>
+                <div className="event-meta-item"><MapPin size={14} /><span>{event.location}</span></div>
               )}
             </div>
-            
-            {event.registration_url && (
-              <button 
-                className="event-cta"
-                style={{ 
-                  backgroundColor: themeColor,
-                  borderColor: themeColor
-                }}
-              >
-                {event.cta_text || 'Learn More'}
-                <ExternalLink size={14} />
-              </button>
-            )}
+
+            <button
+              className="event-cta"
+              style={{ backgroundColor: themeColor, borderColor: themeColor }}
+              onClick={handleCtaClick}
+            >
+              {event.registration_url ? (event.cta_text || 'Learn More') : 'View Events'}
+              <ExternalLink size={14} />
+            </button>
           </div>
         </div>
-        
-        {/* Edge fade effect */}
+
         <div className="event-spotlight-fade" />
       </div>
 
@@ -133,7 +124,6 @@ export default function EventSpotlight() {
           height: 350px;
           flex-shrink: 0;
         }
-
         .event-spotlight-glow {
           position: absolute;
           inset: -30px;
@@ -143,18 +133,10 @@ export default function EventSpotlight() {
           pointer-events: none;
           filter: blur(25px);
         }
-
         @keyframes pulse-glow {
-          0%, 100% {
-            transform: scale(0.92);
-            opacity: 0.4;
-          }
-          50% {
-            transform: scale(1.08);
-            opacity: 0.9;
-          }
+          0%, 100% { transform: scale(0.92); opacity: 0.4; }
+          50%       { transform: scale(1.08); opacity: 0.9; }
         }
-
         .event-spotlight-portal {
           position: relative;
           width: 100%;
@@ -162,33 +144,28 @@ export default function EventSpotlight() {
           border-radius: 50%;
           overflow: hidden;
           transition: all 0.4s ease;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
-
         .event-spotlight-container:hover .event-spotlight-portal {
           transform: scale(1.08);
-          box-shadow: 0 20px 60px rgba(201, 162, 39, 0.4);
+          box-shadow: 0 20px 60px rgba(201,162,39,0.4);
         }
-
         .event-spotlight-bg {
           position: absolute;
           inset: -10%;
           width: 120%;
           height: 120%;
         }
-
         .event-spotlight-bg img {
           filter: blur(8px) brightness(0.7);
         }
-
         .event-spotlight-glass {
           position: absolute;
           inset: 0;
-          background: rgba(15, 37, 64, 0.85);
+          background: rgba(15,37,64,0.85);
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
         }
-
         .event-spotlight-content {
           position: relative;
           width: 100%;
@@ -201,7 +178,6 @@ export default function EventSpotlight() {
           text-align: center;
           z-index: 2;
         }
-
         .event-date-badge {
           position: absolute;
           top: 25px;
@@ -214,21 +190,17 @@ export default function EventSpotlight() {
           border-radius: 12px;
           color: #0f2540;
           font-weight: 600;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-
-        .event-date-badge span:first-of-type {
-          font-size: 28px;
-          line-height: 1;
-        }
-
+        .event-date-badge span:first-of-type { font-size: 28px; line-height: 1; }
+        .badge-soon { font-size: 13px !important; line-height: 1 !important; }
+        .badge-month { font-size: 12px; }
         .event-details {
           display: flex;
           flex-direction: column;
           gap: 14px;
           max-width: 280px;
         }
-
         .event-title {
           font-family: 'Cinzel', serif;
           font-size: 22px;
@@ -237,7 +209,6 @@ export default function EventSpotlight() {
           line-height: 1.2;
           margin: 0;
         }
-
         .event-description {
           font-size: 15px;
           color: #f5f5dc;
@@ -248,7 +219,6 @@ export default function EventSpotlight() {
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
-
         .event-meta {
           display: flex;
           flex-direction: column;
@@ -256,14 +226,12 @@ export default function EventSpotlight() {
           font-size: 13px;
           color: #c9a227;
         }
-
         .event-meta-item {
           display: flex;
           align-items: center;
           gap: 6px;
           justify-content: center;
         }
-
         .event-cta {
           display: inline-flex;
           align-items: center;
@@ -274,43 +242,25 @@ export default function EventSpotlight() {
           font-size: 14px;
           font-weight: 600;
           color: #0f2540;
-          background-color: #c9a227;
           transition: all 0.3s ease;
           cursor: pointer;
           margin-top: 6px;
         }
-
         .event-cta:hover {
           transform: translateY(-3px);
-          box-shadow: 0 6px 16px rgba(201, 162, 39, 0.5);
+          box-shadow: 0 6px 16px rgba(201,162,39,0.5);
         }
-
         .event-spotlight-fade {
           position: absolute;
           inset: 0;
           border-radius: 50%;
-          background: radial-gradient(
-            circle at center,
-            transparent 35%,
-            rgba(15, 37, 64, 0.3) 65%,
-            rgba(15, 37, 64, 0.8) 100%
-          );
+          background: radial-gradient(circle at center, transparent 35%, rgba(15,37,64,0.3) 65%, rgba(15,37,64,0.8) 100%);
           pointer-events: none;
         }
-
         @media (max-width: 768px) {
-          .event-spotlight-container {
-            width: 280px;
-            height: 280px;
-          }
-
-          .event-title {
-            font-size: 18px;
-          }
-
-          .event-description {
-            font-size: 13px;
-          }
+          .event-spotlight-container { width: 280px; height: 280px; }
+          .event-title { font-size: 18px; }
+          .event-description { font-size: 13px; }
         }
       `}</style>
     </div>

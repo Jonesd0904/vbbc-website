@@ -36,7 +36,7 @@ import {
 
 const ADMIN_PASSWORD = 'vbbc2024'
 
-type EventInput = Omit<Event, 'id' | 'created_at'>
+type EventInput = Omit<Event, 'id' | 'created_at'> & { date: string; end_date: string }
 
 export default function EventsAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -127,7 +127,7 @@ export default function EventsAdminPage() {
     setFormData({
       title: event.title,
       description: event.description,
-      date: event.date,
+      date: event.date || '',
       end_date: event.end_date || '',
       image_url: event.image_url || '',
       category: event.category,
@@ -143,18 +143,25 @@ export default function EventsAdminPage() {
   }
 
   const handleSave = async () => {
-    if (!formData.title || !formData.date) {
-      alert('Title and date are required')
+    if (!formData.title) {
+      alert('Title is required')
       return
     }
 
     setSaving(true)
 
+    // Convert empty date string to null so Supabase stores NULL, not ''
+    const payload = {
+      ...formData,
+      date: formData.date?.trim() || null,
+      end_date: formData.end_date?.trim() || null,
+    }
+
     try {
       if (editingEvent) {
-        await updateEvent(editingEvent.id, formData)
+        await updateEvent(editingEvent.id, payload)
       } else {
-        await createEvent(formData)
+        await createEvent(payload)
       }
       await loadEvents()
       resetForm()
@@ -363,7 +370,10 @@ export default function EventsAdminPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date & Time *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date & Time
+                      <span className="ml-1 text-xs text-gray-400 font-normal">(leave blank for "Coming Soon")</span>
+                    </label>
                     <input
                       type="datetime-local"
                       value={formData.date}
@@ -588,19 +598,20 @@ export default function EventsAdminPage() {
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-semibold text-navy text-lg">{event.title}</h3>
                             {event.is_featured && <Star className="text-gold fill-gold" size={16} />}
+                            {!event.date && <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded font-medium">Coming Soon</span>}
                             {!event.is_active && <span className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">Inactive</span>}
                           </div>
                           <p className="text-gray-600 text-sm mb-2">{event.description}</p>
                           <div className="flex flex-wrap gap-3 text-sm text-gray-500">
                             <span className="flex items-center gap-1">
                               <Calendar size={14} />
-                              {new Date(event.date).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit'
-                              })}
+                              {event.date
+                                ? new Date(event.date).toLocaleDateString('en-US', {
+                                    month: 'short', day: 'numeric', year: 'numeric',
+                                    hour: 'numeric', minute: '2-digit'
+                                  })
+                                : <span className="italic text-amber-600">Date TBD — Coming Soon</span>
+                              }
                             </span>
                             {event.location && (
                               <span className="flex items-center gap-1">

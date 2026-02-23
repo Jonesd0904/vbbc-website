@@ -4,7 +4,7 @@ export interface Event {
   id: string
   title: string
   description: string
-  date: string
+  date?: string        // optional — null = "coming soon" announcement
   end_date?: string
   image_url: string
   category: 'service' | 'conference' | 'ministry' | 'community' | 'other'
@@ -46,7 +46,7 @@ export async function setCalendarVisible(visible: boolean): Promise<boolean> {
   }
 }
 
-// Get all future active events (for public calendar page)
+// Get all future + coming-soon active events (for public calendar page)
 export async function getUpcomingEvents(): Promise<Event[]> {
   if (!isSupabaseConfigured || !supabase) {
     return []
@@ -55,12 +55,13 @@ export async function getUpcomingEvents(): Promise<Event[]> {
   try {
     const now = new Date().toISOString()
 
+    // Fetch events that are either in the future OR have no date (coming soon)
     const { data, error } = await supabase
       .from('events')
       .select('*')
       .eq('is_active', true)
-      .gte('date', now)
-      .order('date', { ascending: true })
+      .or(`date.gte.${now},date.is.null`)
+      .order('date', { ascending: true, nullsFirst: false })
 
     if (error) {
       console.error('Error fetching upcoming events:', error)
@@ -73,7 +74,7 @@ export async function getUpcomingEvents(): Promise<Event[]> {
   }
 }
 
-// Get featured event for spotlight
+// Get featured event for spotlight (includes coming-soon events with no date)
 export async function getFeaturedEvent(): Promise<Event | null> {
   if (!isSupabaseConfigured || !supabase) {
     return null
@@ -81,15 +82,15 @@ export async function getFeaturedEvent(): Promise<Event | null> {
 
   try {
     const now = new Date().toISOString()
-    
+
     const { data, error } = await supabase
       .from('events')
       .select('*')
       .eq('is_active', true)
       .eq('is_featured', true)
-      .gte('date', now)
+      .or(`date.gte.${now},date.is.null`)
       .order('priority', { ascending: true })
-      .order('date', { ascending: true})
+      .order('date', { ascending: true, nullsFirst: false })
       .limit(1)
       .maybeSingle()
 
@@ -127,7 +128,7 @@ export async function getAllEvents(): Promise<Event[]> {
 }
 
 // Create new event
-export async function createEvent(event: Omit<Event, 'id' | 'created_at'>): Promise<Event | null> {
+export async function createEvent(event: Omit<Event, 'id' | 'created_at'> & { date?: string | null }): Promise<Event | null> {
   if (!isSupabaseConfigured || !supabase) {
     return null
   }
