@@ -36,16 +36,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: 'bg-gray-100 text-gray-600 border-gray-200',
 }
 
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 function formatTime(dateStr: string) {
   const d = new Date(dateStr)
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
@@ -293,13 +283,13 @@ function MiniCalendar({ events }: { events: Event[] }) {
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
-  const eventDates = events.map((e) => new Date(e.date))
+  const eventDates = events.filter((e) => !!e.date).map((e) => new Date(e.date!))
 
   const prevMonth = () => setViewDate(new Date(year, month - 1, 1))
   const nextMonth = () => setViewDate(new Date(year, month + 1, 1))
 
   const selectedEvents = selected
-    ? events.filter((e) => sameDay(new Date(e.date), selected))
+    ? events.filter((e) => e.date && sameDay(new Date(e.date), selected))
     : []
 
   return (
@@ -368,7 +358,7 @@ function MiniCalendar({ events }: { events: Event[] }) {
                   <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: ev.color || '#c9a227' }} />
                   <div>
                     <p className="text-sm font-medium text-navy leading-snug">{ev.title}</p>
-                    <p className="text-xs text-gray-500">{formatTime(ev.date)}{ev.location ? ` · ${ev.location}` : ''}</p>
+                    <p className="text-xs text-gray-500">{ev.date ? formatTime(ev.date) : 'Time TBD'}{ev.location ? ` · ${ev.location}` : ''}</p>
                   </div>
                 </div>
               ))}
