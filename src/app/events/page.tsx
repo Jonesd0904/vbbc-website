@@ -10,6 +10,8 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   List,
   LayoutGrid,
   Tag,
@@ -74,13 +76,17 @@ function groupByMonth(events: Event[]): Map<string, Event[]> {
 
 // ─── Event Card ─────────────────────────────────────────────────────────────
 
+const DESCRIPTION_LIMIT = 120
+
 function EventCard({ event }: { event: Event }) {
   const catColor = CATEGORY_COLORS[event.category] || CATEGORY_COLORS.other
   const catLabel = CATEGORY_LABELS[event.category] || 'Event'
   const d = new Date(event.date)
+  const [expanded, setExpanded] = useState(false)
+  const isLong = event.description.length > DESCRIPTION_LIMIT
 
   return (
-    <div className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 flex flex-col sm:flex-row">
+    <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 flex flex-col sm:flex-row">
       {/* Date Stamp */}
       <div
         className="flex-shrink-0 flex flex-col items-center justify-center w-full sm:w-24 py-5 sm:py-0"
@@ -100,12 +106,12 @@ function EventCard({ event }: { event: Event }) {
       {/* Image (optional) */}
       {event.image_url && (
         <div className="relative w-full sm:w-40 h-40 sm:h-auto flex-shrink-0 overflow-hidden">
-          <Image src={event.image_url} alt={event.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+          <Image src={event.image_url} alt={event.title} fill className="object-cover transition-transform duration-500" />
         </div>
       )}
 
       {/* Content */}
-      <div className="flex-1 p-5 flex flex-col justify-between gap-3">
+      <div className="flex-1 p-5 flex flex-col gap-3">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-medium ${catColor}`}>
@@ -118,8 +124,26 @@ function EventCard({ event }: { event: Event }) {
               </span>
             )}
           </div>
-          <h3 className="font-cinzel text-navy text-lg leading-snug mb-1">{event.title}</h3>
-          <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">{event.description}</p>
+          <h3 className="font-cinzel text-navy text-lg leading-snug mb-2">{event.title}</h3>
+
+          {/* Description with expand toggle */}
+          <p className="text-gray-600 text-sm leading-relaxed">
+            {expanded || !isLong
+              ? event.description
+              : `${event.description.slice(0, DESCRIPTION_LIMIT).trimEnd()}…`}
+          </p>
+          {isLong && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="mt-1.5 flex items-center gap-1 text-xs font-cinzel text-gold hover:text-navy transition-colors"
+            >
+              {expanded ? (
+                <><ChevronUp size={13} /> Show Less</>
+              ) : (
+                <><ChevronDown size={13} /> Read More</>
+              )}
+            </button>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
@@ -145,6 +169,85 @@ function EventCard({ event }: { event: Event }) {
           >
             {event.cta_text || 'Learn More'}
             <ExternalLink size={13} />
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Grid Event Card ───────────────────────────────────────────────────────────
+
+function GridEventCard({ event: ev }: { event: Event }) {
+  const d = new Date(ev.date)
+  const catColor = CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.other
+  const catLabel = CATEGORY_LABELS[ev.category] || 'Event'
+  const [expanded, setExpanded] = useState(false)
+  const isLong = ev.description.length > DESCRIPTION_LIMIT
+
+  return (
+    <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 flex flex-col">
+      {/* Image or color banner */}
+      <div className="relative h-40 overflow-hidden flex-shrink-0">
+        {ev.image_url ? (
+          <Image src={ev.image_url} alt={ev.title} fill className="object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: ev.color || '#c9a227' }}>
+            <CalendarDays className="text-white/40" size={48} />
+          </div>
+        )}
+        {/* Date badge */}
+        <div className="absolute top-3 left-3 bg-white/95 rounded-lg px-3 py-1.5 text-center shadow-sm">
+          <p className="font-cinzel text-gray-500 text-xs uppercase">
+            {d.toLocaleDateString('en-US', { month: 'short' })}
+          </p>
+          <p className="font-cinzel text-navy text-xl font-bold leading-none">
+            {d.getDate()}
+          </p>
+        </div>
+      </div>
+
+      <div className="p-4 flex flex-col gap-2 flex-1">
+        <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-medium w-fit ${catColor}`}>
+          <Tag size={10} />
+          {catLabel}
+        </span>
+        <h3 className="font-cinzel text-navy text-base leading-snug">{ev.title}</h3>
+
+        {/* Description with expand toggle */}
+        <div>
+          <p className="text-gray-500 text-sm leading-relaxed">
+            {expanded || !isLong
+              ? ev.description
+              : `${ev.description.slice(0, DESCRIPTION_LIMIT).trimEnd()}…`}
+          </p>
+          {isLong && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="mt-1.5 flex items-center gap-1 text-xs font-cinzel text-gold hover:text-navy transition-colors"
+            >
+              {expanded ? (
+                <><ChevronUp size={13} /> Show Less</>
+              ) : (
+                <><ChevronDown size={13} /> Read More</>
+              )}
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1 text-xs text-gray-400 mt-auto pt-2">
+          <span className="flex items-center gap-1.5"><Clock size={12} className="text-gold" />{formatTime(ev.date)}{ev.end_date && ` – ${formatTime(ev.end_date)}`}</span>
+          {ev.location && <span className="flex items-center gap-1.5"><MapPin size={12} className="text-gold" />{ev.location}</span>}
+        </div>
+
+        {ev.registration_url && (
+          <a
+            href={ev.registration_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 inline-flex items-center gap-1 text-xs font-cinzel text-navy hover:text-gold transition-colors"
+          >
+            {ev.cta_text || 'Learn More'} <ExternalLink size={11} />
           </a>
         )}
       </div>
@@ -427,56 +530,9 @@ export default function EventsPage() {
               {/* Events — Grid View */}
               {!loading && filtered.length > 0 && view === 'grid' && (
                 <div className="grid sm:grid-cols-2 gap-5 fade-in">
-                  {filtered.map((ev) => {
-                    const d = new Date(ev.date)
-                    const catColor = CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.other
-                    const catLabel = CATEGORY_LABELS[ev.category] || 'Event'
-                    return (
-                      <div key={ev.id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 group">
-                        {/* Image or color banner */}
-                        <div className="relative h-40 overflow-hidden">
-                          {ev.image_url ? (
-                            <Image src={ev.image_url} alt={ev.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: ev.color || '#c9a227' }}>
-                              <CalendarDays className="text-white/40" size={48} />
-                            </div>
-                          )}
-                          {/* Date badge */}
-                          <div className="absolute top-3 left-3 bg-white/95 rounded-lg px-3 py-1.5 text-center shadow-sm">
-                            <p className="font-cinzel text-gray-500 text-xs uppercase">
-                              {d.toLocaleDateString('en-US', { month: 'short' })}
-                            </p>
-                            <p className="font-cinzel text-navy text-xl font-bold leading-none">
-                              {d.getDate()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-medium mb-2 ${catColor}`}>
-                            <Tag size={10} />
-                            {catLabel}
-                          </span>
-                          <h3 className="font-cinzel text-navy text-base leading-snug mb-1">{ev.title}</h3>
-                          <p className="text-gray-500 text-sm line-clamp-2 mb-3">{ev.description}</p>
-                          <div className="flex flex-col gap-1 text-xs text-gray-400">
-                            <span className="flex items-center gap-1.5"><Clock size={12} className="text-gold" />{formatTime(ev.date)}</span>
-                            {ev.location && <span className="flex items-center gap-1.5"><MapPin size={12} className="text-gold" />{ev.location}</span>}
-                          </div>
-                          {ev.registration_url && (
-                            <a
-                              href={ev.registration_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-3 inline-flex items-center gap-1 text-xs font-cinzel text-navy hover:text-gold transition-colors"
-                            >
-                              {ev.cta_text || 'Learn More'} <ExternalLink size={11} />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
+                  {filtered.map((ev) => (
+                    <GridEventCard key={ev.id} event={ev} />
+                  ))}
                 </div>
               )}
             </div>
