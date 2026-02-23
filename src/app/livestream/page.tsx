@@ -8,7 +8,7 @@ const FACEBOOK_PAGE_ID = '100064556957430'
 
 function FacebookPlaceholder({ onLoad }: { onLoad: () => void }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-gradient-to-br from-navy-dark via-navy to-navy-light">
+    <div className="flex flex-col items-center justify-center text-center px-6 py-12 bg-gradient-to-br from-navy-dark via-navy to-navy-light">
       {/* Pulsing radio icon */}
       <div className="relative mb-6">
         <div className="absolute inset-0 rounded-full bg-gold/20 animate-ping" />
@@ -123,13 +123,13 @@ export default function LivestreamPage() {
           <div className="fade-in">
             {activeTab === 'facebook' ? (
               <div>
-                <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg">
-                  {/* Placeholder shown until user clicks Load */}
-                  {!streamLoaded && (
+                {/* When stream not loaded: natural height so nothing clips on mobile */}
+                {!streamLoaded ? (
+                  <div className="rounded-xl overflow-hidden shadow-lg">
                     <FacebookPlaceholder onLoad={() => setStreamLoaded(true)} />
-                  )}
-                  {/* Iframe only rendered after user clicks Load */}
-                  {streamLoaded && (
+                  </div>
+                ) : (
+                  <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg">
                     <iframe
                       src={`https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D${FACEBOOK_PAGE_ID}&show_text=false&width=720&height=405&appId`}
                       width="100%"
@@ -139,8 +139,8 @@ export default function LivestreamPage() {
                       allowFullScreen
                       allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                     />
-                  )}
-                </div>
+                  </div>
+                )}
                 {/* Always-visible fallback link once stream is loaded */}
                 {streamLoaded && (
                   <div className="mt-3 text-center">
