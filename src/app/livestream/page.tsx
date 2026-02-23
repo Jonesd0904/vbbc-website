@@ -1,21 +1,63 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Sun, Moon, BookOpen, Facebook, Youtube, Instagram } from 'lucide-react'
+import { Sun, Moon, BookOpen, Facebook, Youtube, Instagram, Radio, CalendarDays } from 'lucide-react'
 
 const FACEBOOK_PAGE_URL = 'https://www.facebook.com/profile.php?id=100064556957430'
 const FACEBOOK_PAGE_ID = '100064556957430'
 
+function FacebookPlaceholder() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-gradient-to-br from-navy-dark via-navy to-navy-light">
+      {/* Pulsing radio icon */}
+      <div className="relative mb-6">
+        <div className="absolute inset-0 rounded-full bg-gold/20 animate-ping" />
+        <div className="relative bg-gold/10 border border-gold/40 rounded-full p-5">
+          <Radio className="text-gold" size={40} />
+        </div>
+      </div>
+
+      <h3 className="font-cinzel text-white text-2xl mb-2">We're Not Live Right Now</h3>
+      <p className="font-lora text-gray-300 text-sm mb-6 max-w-sm leading-relaxed">
+        Join us during one of our regular service times to watch live, or visit our Facebook page to catch up on past services.
+      </p>
+
+      {/* Service time pills */}
+      <div className="flex flex-wrap justify-center gap-2 mb-8">
+        {[
+          'Sun · 10:30 AM',
+          'Sun · 6:00 PM',
+          'Wed · 7:15 PM',
+        ].map((label) => (
+          <div key={label} className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-4 py-1.5">
+            <CalendarDays size={12} className="text-gold" />
+            <span className="font-cinzel text-white text-xs">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      <a
+        href={FACEBOOK_PAGE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 bg-[#1877f2] text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity font-cinzel text-sm"
+      >
+        <Facebook size={16} />
+        Watch on Facebook
+      </a>
+    </div>
+  )
+}
+
 export default function LivestreamPage() {
   const [activeTab, setActiveTab] = useState<'facebook' | 'youtube'>('facebook')
+  const [fbLoaded, setFbLoaded] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible')
-          }
+          if (entry.isIntersecting) entry.target.classList.add('visible')
         })
       },
       { threshold: 0.15 }
@@ -39,7 +81,7 @@ export default function LivestreamPage() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-8 fade-in">
             <p className="text-gray-600 text-lg leading-relaxed">
-              Can't join us in person? Watch our services live from anywhere in the world! 
+              Can't join us in person? Watch our services live from anywhere in the world!
               We stream all of our regular services so you can worship with us no matter where you are.
             </p>
           </div>
@@ -49,9 +91,7 @@ export default function LivestreamPage() {
             <button
               onClick={() => setActiveTab('facebook')}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-cinzel transition-colors ${
-                activeTab === 'facebook'
-                  ? 'bg-navy text-white'
-                  : 'bg-white text-navy hover:bg-gray-100'
+                activeTab === 'facebook' ? 'bg-navy text-white' : 'bg-white text-navy hover:bg-gray-100'
               }`}
             >
               <Facebook size={20} />
@@ -60,9 +100,7 @@ export default function LivestreamPage() {
             <button
               onClick={() => setActiveTab('youtube')}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-cinzel transition-colors ${
-                activeTab === 'youtube'
-                  ? 'bg-navy text-white'
-                  : 'bg-white text-navy hover:bg-gray-100'
+                activeTab === 'youtube' ? 'bg-navy text-white' : 'bg-white text-navy hover:bg-gray-100'
               }`}
             >
               <Youtube size={20} />
@@ -74,51 +112,52 @@ export default function LivestreamPage() {
           <div className="fade-in">
             {activeTab === 'facebook' ? (
               <div>
-                {/* Facebook Live Embed */}
-                <div className="aspect-video bg-navy rounded-xl overflow-hidden shadow-lg">
+                {/* Wrapper: placeholder sits behind, iframe on top */}
+                <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg">
+                  {/* Placeholder — always rendered, visible when iframe is blank */}
+                  <FacebookPlaceholder />
+
+                  {/* Facebook iframe — covers placeholder when a live/recent video loads */}
                   <iframe
-                    src={`https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D${FACEBOOK_PAGE_ID}&show_text=false&width=560&height=314&appId`}
+                    key="fb-live"
+                    src={`https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D${FACEBOOK_PAGE_ID}&show_text=false&width=720&height=405&appId`}
                     width="100%"
                     height="100%"
+                    className="absolute inset-0 z-10"
                     style={{ border: 'none', overflow: 'hidden' }}
                     allowFullScreen
                     allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                    onLoad={() => setFbLoaded(true)}
                   />
                 </div>
-                {/* Not Live Fallback */}
-                <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <p className="text-gray-500 text-sm text-center">
-                    If no video appears, the service may not be live yet — check back at service time, or watch on Facebook directly.
-                  </p>
-                  <a
-                    href={FACEBOOK_PAGE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 bg-[#1877f2] text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap text-sm font-cinzel"
-                  >
-                    <Facebook size={16} />
-                    Open on Facebook
-                  </a>
-                </div>
+
+                <p className="mt-3 text-center text-gray-400 text-xs">
+                  Live stream appears automatically above during service times.
+                </p>
               </div>
             ) : (
               <div>
-                <div className="aspect-video bg-navy rounded-xl overflow-hidden shadow-lg">
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src="https://www.youtube.com/embed/live_stream?channel=YOUR_CHANNEL_ID"
-                    title="Victory Bible Baptist Church Live Stream"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-                <div className="mt-4 text-center">
-                  <p className="text-gray-500 text-sm">
-                    If you don't see a video above, the livestream may not be active. 
-                    Check back during our regular service times.
-                  </p>
+                {/* YouTube placeholder */}
+                <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg bg-gradient-to-br from-navy-dark via-navy to-navy-light">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 rounded-full bg-gold/20 animate-ping" />
+                      <div className="relative bg-gold/10 border border-gold/40 rounded-full p-5">
+                        <Youtube className="text-gold" size={40} />
+                      </div>
+                    </div>
+                    <h3 className="font-cinzel text-white text-2xl mb-2">YouTube Coming Soon</h3>
+                    <p className="font-lora text-gray-300 text-sm mb-6 max-w-sm leading-relaxed">
+                      We're working on getting our YouTube channel set up. In the meantime, catch us live on Facebook!
+                    </p>
+                    <button
+                      onClick={() => setActiveTab('facebook')}
+                      className="flex items-center gap-2 bg-[#1877f2] text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity font-cinzel text-sm"
+                    >
+                      <Facebook size={16} />
+                      Watch on Facebook Instead
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
