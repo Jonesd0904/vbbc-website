@@ -23,7 +23,9 @@ export default function EventSpotlight() {
   if (loading || !event) return null
 
   const hasDate = !!event.date
-  const eventDate = hasDate ? new Date(event.date!) : null
+  // Strip timezone so times display as-entered, not shifted to UTC
+  const parseLocal = (s: string) => new Date(s.replace(/([+-]\d{2}:?\d{2}|Z)$/, ''))
+  const eventDate = hasDate ? parseLocal(event.date!) : null
   const formattedDate = eventDate
     ? eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null

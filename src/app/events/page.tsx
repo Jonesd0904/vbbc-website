@@ -36,8 +36,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: 'bg-gray-100 text-gray-600 border-gray-200',
 }
 
+// Strip timezone offset so times display as-entered, not converted to local
+function parseLocalDate(dateStr: string) {
+  return new Date(dateStr.replace(/([+-]\d{2}:?\d{2}|Z)$/, ''))
+}
+
 function formatTime(dateStr: string) {
-  const d = new Date(dateStr)
+  const d = parseLocalDate(dateStr)
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 }
 
@@ -57,7 +62,7 @@ function groupByMonth(events: Event[]): Map<string, Event[]> {
   const map = new Map<string, Event[]>()
   events.forEach((ev) => {
     if (!ev.date) return // coming-soon events handled separately
-    const d = new Date(ev.date)
+    const d = parseLocalDate(ev.date)
     const key = `${d.getFullYear()}-${d.getMonth()}`
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(ev)
@@ -73,7 +78,7 @@ function EventCard({ event }: { event: Event }) {
   const catColor = CATEGORY_COLORS[event.category] || CATEGORY_COLORS.other
   const catLabel = CATEGORY_LABELS[event.category] || 'Event'
   const hasDate = !!event.date
-  const d = hasDate ? new Date(event.date!) : null
+  const d = hasDate ? parseLocalDate(event.date!) : null
   const [expanded, setExpanded] = useState(false)
   const isLong = event.description.length > DESCRIPTION_LIMIT
 
@@ -188,7 +193,7 @@ function EventCard({ event }: { event: Event }) {
 
 function GridEventCard({ event: ev }: { event: Event }) {
   const hasDate = !!ev.date
-  const d = hasDate ? new Date(ev.date!) : null
+  const d = hasDate ? parseLocalDate(ev.date!) : null
   const catColor = CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.other
   const catLabel = CATEGORY_LABELS[ev.category] || 'Event'
   const [expanded, setExpanded] = useState(false)
@@ -283,13 +288,13 @@ function MiniCalendar({ events }: { events: Event[] }) {
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
-  const eventDates = events.filter((e) => !!e.date).map((e) => new Date(e.date!))
+  const eventDates = events.filter((e) => !!e.date).map((e) => parseLocalDate(e.date!))
 
   const prevMonth = () => setViewDate(new Date(year, month - 1, 1))
   const nextMonth = () => setViewDate(new Date(year, month + 1, 1))
 
   const selectedEvents = selected
-    ? events.filter((e) => e.date && sameDay(new Date(e.date), selected))
+    ? events.filter((e) => e.date && sameDay(parseLocalDate(e.date), selected))
     : []
 
   return (

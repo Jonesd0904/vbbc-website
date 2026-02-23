@@ -606,7 +606,7 @@ export default function EventsAdminPage() {
                             <span className="flex items-center gap-1">
                               <Calendar size={14} />
                               {event.date
-                                ? new Date(event.date).toLocaleDateString('en-US', {
+                                ? new Date(event.date.replace(/([+-]\d{2}:?\d{2}|Z)$/, '')).toLocaleDateString('en-US', {
                                     month: 'short', day: 'numeric', year: 'numeric',
                                     hour: 'numeric', minute: '2-digit'
                                   })
