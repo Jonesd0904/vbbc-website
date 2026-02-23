@@ -4,7 +4,7 @@ export interface Event {
   id: string
   title: string
   description: string
-  date?: string        // optional — null = "coming soon" announcement
+  date?: string | null  // null = "coming soon" announcement
   end_date?: string
   image_url: string
   category: 'service' | 'conference' | 'ministry' | 'community' | 'other'
@@ -155,7 +155,7 @@ export async function createEvent(event: Omit<Event, 'id' | 'created_at'> & { da
 }
 
 // Update event
-export async function updateEvent(id: string, updates: Partial<Event>): Promise<boolean> {
+export async function updateEvent(id: string, updates: Partial<Event> & { date?: string | null }): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) {
     console.error('Supabase not configured')
     return false
