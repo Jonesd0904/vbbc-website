@@ -18,6 +18,61 @@ export interface Event {
   created_at: string
 }
 
+// Get calendar visibility setting
+export async function getCalendarVisible(): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) return true
+  try {
+    const { data } = await supabase
+      .from('site_content')
+      .select('value')
+      .eq('key', 'calendar_visible')
+      .maybeSingle()
+    if (!data) return true // default to visible
+    return data.value !== 'false'
+  } catch {
+    return true
+  }
+}
+
+export async function setCalendarVisible(visible: boolean): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) return false
+  try {
+    const { error } = await supabase
+      .from('site_content')
+      .upsert({ key: 'calendar_visible', value: visible ? 'true' : 'false', updated_at: new Date().toISOString() }, { onConflict: 'key' })
+    return !error
+  } catch {
+    return false
+  }
+}
+
+// Get all future active events (for public calendar page)
+export async function getUpcomingEvents(): Promise<Event[]> {
+  if (!isSupabaseConfigured || !supabase) {
+    return []
+  }
+
+  try {
+    const now = new Date().toISOString()
+
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('is_active', true)
+      .gte('date', now)
+      .order('date', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching upcoming events:', error)
+      return []
+    }
+
+    return data || []
+  } catch {
+    return []
+  }
+}
+
 // Get featured event for spotlight
 export async function getFeaturedEvent(): Promise<Event | null> {
   if (!isSupabaseConfigured || !supabase) {

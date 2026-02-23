@@ -29,6 +29,8 @@ import {
   uploadEventImage,
   toggleEventActive,
   toggleEventFeatured,
+  getCalendarVisible,
+  setCalendarVisible,
   Event,
 } from '@/lib/events'
 
@@ -45,6 +47,8 @@ export default function EventsAdminPage() {
   const [loading, setLoading] = useState(true)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [calendarVisible, setCalendarVisibleState] = useState(true)
+  const [togglingVisibility, setTogglingVisibility] = useState(false)
 
   const [formData, setFormData] = useState<EventInput>({
     title: '',
@@ -76,6 +80,7 @@ export default function EventsAdminPage() {
   useEffect(() => {
     if (isAuthenticated) {
       loadEvents()
+      getCalendarVisible().then(setCalendarVisibleState)
     }
   }, [isAuthenticated])
 
@@ -184,6 +189,14 @@ export default function EventsAdminPage() {
     setUploadingImage(false)
   }
 
+  const handleToggleVisibility = async () => {
+    setTogglingVisibility(true)
+    const newVal = !calendarVisible
+    const ok = await setCalendarVisible(newVal)
+    if (ok) setCalendarVisibleState(newVal)
+    setTogglingVisibility(false)
+  }
+
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     await toggleEventActive(id, !currentStatus)
     await loadEvents()
@@ -258,7 +271,7 @@ export default function EventsAdminPage() {
             <div className="w-px h-6 bg-gray-600" />
             <div>
               <h1 className="font-cinzel text-xl">Events Management</h1>
-              <p className="text-gray-300 text-sm">Manage event spotlight</p>
+              <p className="text-gray-300 text-sm">Manage the public calendar & homepage spotlight</p>
             </div>
           </div>
           {!showForm && (
@@ -274,6 +287,40 @@ export default function EventsAdminPage() {
       </header>
 
       <div className="max-w-7xl mx-auto p-6">
+        {/* Calendar Visibility Banner */}
+        <div className={`flex items-center justify-between gap-4 rounded-xl p-4 mb-6 border ${
+          calendarVisible
+            ? 'bg-green-50 border-green-200'
+            : 'bg-amber-50 border-amber-200'
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${calendarVisible ? 'bg-green-500 animate-pulse' : 'bg-amber-400'}`} />
+            <div>
+              <p className={`font-cinzel text-sm font-semibold ${calendarVisible ? 'text-green-800' : 'text-amber-800'}`}>
+                Public Calendar is {calendarVisible ? 'Visible' : 'Hidden'}
+              </p>
+              <p className={`text-xs mt-0.5 ${calendarVisible ? 'text-green-600' : 'text-amber-600'}`}>
+                {calendarVisible
+                  ? 'The /events page is live and visible to all visitors.'
+                  : 'The /events page is hidden — visitors see a "coming soon" message.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleToggleVisibility}
+            disabled={togglingVisibility}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-cinzel transition-colors flex-shrink-0 ${
+              togglingVisibility
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : calendarVisible
+                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+            }`}
+          >
+            {togglingVisibility ? 'Saving...' : calendarVisible ? 'Hide Calendar' : 'Make Visible'}
+          </button>
+        </div>
+
         {/* Event Form */}
         {showForm && (
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
@@ -509,7 +556,7 @@ export default function EventsAdminPage() {
           <div className="p-6 border-b">
             <h2 className="font-cinzel text-xl text-navy">All Events ({events.length})</h2>
             <p className="text-gray-500 text-sm mt-1">
-              Featured events with star icon will appear in the homepage spotlight
+              Active events appear on the public <strong>/events</strong> calendar. Starred events also show in the homepage spotlight.
             </p>
           </div>
 
