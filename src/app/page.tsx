@@ -115,14 +115,21 @@ export default function Home() {
         <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="fade-in">
-              <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-lg">
-                <Image
-                  src="/images/church-building.jpg"
-                  alt="Victory Bible Baptist Church Building"
-                  width={800}
-                  height={600}
-                  className="w-full h-full object-cover"
-                />
+              {/* Framed photo: offset gold frame + warm-graded image */}
+              <div className="relative">
+                <div
+                  className="absolute -top-4 -left-4 right-4 bottom-4 border-2 border-gold/85 rounded-lg pointer-events-none"
+                  aria-hidden="true"
+                ></div>
+                <div className="relative aspect-[4/3] rounded-md overflow-hidden shadow-[0_14px_40px_rgba(15,37,64,0.22)]">
+                  <Image
+                    src="/images/church-building-warm.jpg"
+                    alt="Victory Bible Baptist Church Building"
+                    width={800}
+                    height={600}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
             </div>
             <div className="fade-in">
