@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { ChevronDown, MapPin, Clock, Phone, BookOpen, Users, Music, Heart } from 'lucide-react'
 import EventSpotlight from '@/components/EventSpotlight'
 
@@ -122,13 +121,18 @@ export default function Home() {
                   aria-hidden="true"
                 ></div>
                 <div className="relative aspect-[4/3] rounded-md overflow-hidden shadow-[0_14px_40px_rgba(15,37,64,0.22)]">
-                  <Image
-                    src="/images/church-building-warm.jpg"
-                    alt="Victory Bible Baptist Church Building"
-                    width={800}
-                    height={600}
+                  <video
                     className="w-full h-full object-cover"
-                  />
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    poster="/images/service-loop-poster.jpg"
+                    aria-label="Worship service at Victory Bible Baptist Church"
+                  >
+                    <source src="/videos/service-loop.mp4" type="video/mp4" />
+                  </video>
                 </div>
               </div>
             </div>
