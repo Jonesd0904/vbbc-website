@@ -50,7 +50,7 @@ export default function Navbar() {
             ))}
             {/* School Link - Highlighted */}
             <a
-              href="https://victorybiblebaptist.org/Victory_Bible_Christian_School.html"
+              href="https://www.victorybible.info/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 font-lora text-sm bg-gold text-white px-3 py-1.5 rounded-md hover:bg-gold/80 transition-colors duration-300 whitespace-nowrap"
@@ -86,7 +86,7 @@ export default function Navbar() {
             ))}
             {/* School Link - Mobile */}
             <a
-              href="https://victorybiblebaptist.org/Victory_Bible_Christian_School.html"
+              href="https://www.victorybible.info/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 font-lora text-white bg-gold px-4 py-2 rounded-md hover:bg-gold/80 transition-colors duration-300 w-fit"

@@ -52,7 +52,7 @@ export default function Footer() {
             </ul>
             <div className="mt-4">
               <a
-                href="https://victorybiblebaptist.org/Victory_Bible_Christian_School.html"
+                href="https://www.victorybible.info/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-gold hover:text-white transition-colors text-sm"
