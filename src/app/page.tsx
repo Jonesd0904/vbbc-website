@@ -61,16 +61,16 @@ export default function Home() {
                     <path d="M50 5 L50 95 M30 25 L70 25" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/>
                   </svg>
                 </div>
-                <p className="font-lora italic text-gold text-lg md:text-xl mb-4">Welcome to</p>
-                <h1 className="font-trajan text-4xl md:text-6xl lg:text-7xl text-white font-semibold mb-6 tracking-wide">
+                <p className="font-lora italic text-gold text-lg md:text-xl mb-4 [text-shadow:0_2px_8px_rgba(0,0,0,0.75)]">Welcome to</p>
+                <h1 className="font-trajan text-4xl md:text-6xl lg:text-7xl text-white font-semibold mb-6 tracking-wide [text-shadow:0_3px_18px_rgba(0,0,0,0.7),0_1px_3px_rgba(0,0,0,0.55)]">
                   Victory Bible<br />Baptist Church
                 </h1>
-                <p className="font-lora text-xl md:text-2xl text-white/90 mb-4">
+                <p className="font-lora text-xl md:text-2xl text-white mb-4 [text-shadow:0_2px_8px_rgba(0,0,0,0.75)]">
                   Living by Faith. Enjoying Victory in Christ.
                 </p>
-                <p className="font-lora italic text-gold/90 text-lg mb-10 max-w-2xl mx-auto">
+                <p className="font-lora italic text-gold text-lg mb-10 max-w-2xl mx-auto [text-shadow:0_2px_8px_rgba(0,0,0,0.75)]">
                   "But thanks be to God, which giveth us the victory through our Lord Jesus Christ."
-                  <span className="block mt-2 text-white/70">— 1 Corinthians 15:57</span>
+                  <span className="block mt-2 text-white/85">— 1 Corinthians 15:57</span>
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
                   <Link href="/about" className="btn-primary">
