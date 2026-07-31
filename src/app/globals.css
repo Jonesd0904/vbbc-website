@@ -37,7 +37,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-gold text-navy font-cinzel px-8 py-4 rounded transition-all duration-300 hover:bg-gold-light hover:shadow-lg;
+    @apply relative overflow-hidden bg-gold text-navy font-cinzel px-8 py-4 rounded transition-all duration-300 hover:bg-gold-light;
   }
   
   .btn-secondary {
@@ -54,6 +54,103 @@
   
   .container-wide {
     @apply max-w-6xl mx-auto;
+  }
+}
+
+
+/* ── Modern hover effects: buttons & navbar ────────────────────────── */
+
+/* Gold buttons: lift + gold glow + shine sweep */
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(201, 162, 39, 0.55);
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.55s ease;
+  pointer-events: none;
+}
+.btn-primary:hover::after {
+  left: 130%;
+}
+
+/* Outline buttons: lift + soft shadow */
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Shine sweep for small pill buttons (e.g. VBCS in the navbar) */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.55s ease;
+  pointer-events: none;
+}
+.btn-shine:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(201, 162, 39, 0.5);
+}
+.btn-shine:hover::after {
+  left: 130%;
+}
+
+/* Navbar links: animated gold underline + subtle lift */
+.nav-link {
+  position: relative;
+  display: inline-block;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #c9a227, #d4b54a);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.nav-link:hover {
+  color: #c9a227;
+  transform: translateY(-1px);
+}
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* Respect the user's reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary::after,
+  .btn-shine::after,
+  .nav-link::after {
+    transition: none;
+  }
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-shine:hover,
+  .nav-link:hover {
+    transform: none;
   }
 }
 

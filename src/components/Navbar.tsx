@@ -43,7 +43,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="font-lora text-gray-700 hover:text-gold transition-colors duration-300 text-sm"
+                className="nav-link font-lora text-gray-700 text-sm"
               >
                 {link.label}
               </Link>
@@ -53,7 +53,7 @@ export default function Navbar() {
               href="https://www.victorybible.info/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 font-lora text-sm bg-gold text-white px-3 py-1.5 rounded-md hover:bg-gold/80 transition-colors duration-300 whitespace-nowrap"
+              className="btn-shine flex items-center gap-1.5 font-lora text-sm bg-gold text-white px-3 py-1.5 rounded-md hover:bg-gold/80 transition-all duration-300 whitespace-nowrap"
             >
               <GraduationCap size={15} />
               VBCS
