@@ -94,11 +94,27 @@ export async function getFeaturedEvent(): Promise<Event | null> {
       .limit(1)
       .maybeSingle()
 
-    if (error) {
+    if (!error && data) {
+      return data
+    }
+
+    // Fallback: no upcoming event is flagged as featured (or the flagged one
+    // is in the past) — show the next upcoming active event instead, so the
+    // homepage spotlight never goes empty while events exist.
+    const { data: next, error: nextError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('is_active', true)
+      .or(`date.gte.${now},date.is.null`)
+      .order('date', { ascending: true, nullsFirst: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (nextError) {
       return null
     }
 
-    return data
+    return next
   } catch {
     return null
   }
