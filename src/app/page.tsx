@@ -28,7 +28,21 @@ export default function Home() {
     <>
       {/* Hero Section with Event Spotlight */}
       <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-dark via-navy to-navy-light overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
+        {/* Background video: looping clouds (placeholder — swap /videos/sky-loop.mp4 for a real one anytime) */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        >
+          <source src="/videos/sky-loop.mp4" type="video/mp4" />
+        </video>
+        {/* Overlays keep the hero text readable over the video */}
+        <div className="absolute inset-0 bg-gradient-to-br from-navy-dark/80 via-navy/60 to-navy-light/50"></div>
+        <div className="absolute inset-0 bg-black/30"></div>
         
         {/* Main Content Container */}
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-12 pb-20">
