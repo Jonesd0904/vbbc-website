@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { Sun, Moon, BookOpen, Facebook, Youtube, Instagram, Radio, CalendarDays } from 'lucide-react'
 
 const FACEBOOK_PAGE_URL = 'https://www.facebook.com/profile.php?id=100064556957430'
-const FACEBOOK_PAGE_ID = '100064556957430'
 
 function FacebookPlaceholder({ onLoad }: { onLoad: () => void }) {
   return (
@@ -129,12 +128,15 @@ export default function LivestreamPage() {
                     <FacebookPlaceholder onLoad={() => setStreamLoaded(true)} />
                   </div>
                 ) : (
-                  <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg">
+                  <div className="rounded-xl overflow-hidden shadow-lg bg-white flex justify-center">
+                    {/* Facebook Page Plugin (timeline) — shows the page feed incl. live videos.
+                        The old video.php embed pointed at the profile URL, which Facebook
+                        cannot render as a video, so it always stayed blank. */}
                     <iframe
-                      src={`https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D${FACEBOOK_PAGE_ID}&show_text=false&width=720&height=405&appId`}
-                      width="100%"
-                      height="100%"
-                      className="absolute inset-0"
+                      src={`https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FACEBOOK_PAGE_URL)}&tabs=timeline&width=500&height=680&adapt_container_width=true&hide_cover=false&show_facepile=false&lazy=true`}
+                      width="500"
+                      height="680"
+                      className="w-full max-w-[500px]"
                       style={{ border: 'none', overflow: 'hidden' }}
                       allowFullScreen
                       allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
