@@ -26,7 +26,7 @@ export default function Footer() {
               <a href="https://www.instagram.com/victorybiblebaptistirmo" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold transition-colors">
                 <Instagram size={24} />
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold transition-colors">
+              <a href="https://www.youtube.com/channel/UCdivEqKoP9dEaw6xyZmGsWw" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold transition-colors">
                 <Youtube size={24} />
               </a>
             </div>

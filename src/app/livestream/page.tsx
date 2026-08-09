@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { Sun, Moon, BookOpen, Facebook, Youtube, Instagram, Radio, CalendarDays } from 'lucide-react'
 
 const FACEBOOK_PAGE_URL = 'https://www.facebook.com/profile.php?id=100064556957430'
+const YOUTUBE_CHANNEL_ID = 'UCdivEqKoP9dEaw6xyZmGsWw'
+const YOUTUBE_CHANNEL_URL = `https://www.youtube.com/channel/${YOUTUBE_CHANNEL_ID}`
+const YOUTUBE_LIVE_URL = `${YOUTUBE_CHANNEL_URL}/live`
 
 function FacebookPlaceholder({ onLoad }: { onLoad: () => void }) {
   return (
@@ -59,9 +62,64 @@ function FacebookPlaceholder({ onLoad }: { onLoad: () => void }) {
   )
 }
 
+function YouTubePlaceholder({ onLoad }: { onLoad: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center px-6 py-12 bg-gradient-to-br from-navy-dark via-navy to-navy-light">
+      {/* Pulsing YouTube icon */}
+      <div className="relative mb-6">
+        <div className="absolute inset-0 rounded-full bg-gold/20 animate-ping" />
+        <div className="relative bg-gold/10 border border-gold/40 rounded-full p-5">
+          <Youtube className="text-gold" size={40} />
+        </div>
+      </div>
+
+      <h3 className="font-cinzel text-white text-2xl mb-2">Join Us Live on YouTube</h3>
+      <p className="font-lora text-gray-300 text-sm mb-6 max-w-sm leading-relaxed">
+        We stream all our regular services. Click below to load the live player, or watch directly on our YouTube channel.
+      </p>
+
+      {/* Service time pills */}
+      <div className="flex flex-wrap justify-center gap-2 mb-8">
+        {[
+          'Sun · 10:30 AM',
+          'Sun · 6:00 PM',
+          'Wed · 7:15 PM',
+        ].map((label) => (
+          <div key={label} className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-4 py-1.5">
+            <CalendarDays size={12} className="text-gold" />
+            <span className="font-cinzel text-white text-xs">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        {/* Primary: load embed on page */}
+        <button
+          onClick={onLoad}
+          className="flex items-center gap-2 bg-gold text-white px-6 py-3 rounded-lg hover:bg-gold/80 transition-colors font-cinzel text-sm"
+        >
+          <Radio size={16} />
+          Load Live Stream
+        </button>
+        {/* Fallback: open YouTube directly */}
+        <a
+          href={YOUTUBE_LIVE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 bg-[#ff0000] text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity font-cinzel text-sm"
+        >
+          <Youtube size={16} />
+          Open on YouTube
+        </a>
+      </div>
+    </div>
+  )
+}
+
 export default function LivestreamPage() {
-  const [activeTab, setActiveTab] = useState<'facebook' | 'youtube'>('facebook')
+  const [activeTab, setActiveTab] = useState<'facebook' | 'youtube'>('youtube')
   const [streamLoaded, setStreamLoaded] = useState(false)
+  const [ytLoaded, setYtLoaded] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -99,6 +157,15 @@ export default function LivestreamPage() {
           {/* Platform Tabs */}
           <div className="flex justify-center gap-4 mb-8 fade-in">
             <button
+              onClick={() => setActiveTab('youtube')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-cinzel transition-colors ${
+                activeTab === 'youtube' ? 'bg-navy text-white' : 'bg-white text-navy hover:bg-gray-100'
+              }`}
+            >
+              <Youtube size={20} />
+              YouTube Live
+            </button>
+            <button
               onClick={() => setActiveTab('facebook')}
               className={`flex items-center gap-2 px-6 py-3 rounded-lg font-cinzel transition-colors ${
                 activeTab === 'facebook' ? 'bg-navy text-white' : 'bg-white text-navy hover:bg-gray-100'
@@ -106,15 +173,6 @@ export default function LivestreamPage() {
             >
               <Facebook size={20} />
               Facebook Live
-            </button>
-            <button
-              onClick={() => setActiveTab('youtube')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-cinzel transition-colors ${
-                activeTab === 'youtube' ? 'bg-navy text-white' : 'bg-white text-navy hover:bg-gray-100'
-              }`}
-            >
-              <Youtube size={20} />
-              YouTube
             </button>
           </div>
 
@@ -162,28 +220,42 @@ export default function LivestreamPage() {
               </div>
             ) : (
               <div>
-                {/* YouTube placeholder */}
-                <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg bg-gradient-to-br from-navy-dark via-navy to-navy-light">
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 rounded-full bg-gold/20 animate-ping" />
-                      <div className="relative bg-gold/10 border border-gold/40 rounded-full p-5">
-                        <Youtube className="text-gold" size={40} />
-                      </div>
-                    </div>
-                    <h3 className="font-cinzel text-white text-2xl mb-2">YouTube Coming Soon</h3>
-                    <p className="font-lora text-gray-300 text-sm mb-6 max-w-sm leading-relaxed">
-                      We're working on getting our YouTube channel set up. In the meantime, catch us live on Facebook!
-                    </p>
-                    <button
-                      onClick={() => setActiveTab('facebook')}
-                      className="flex items-center gap-2 bg-[#1877f2] text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity font-cinzel text-sm"
-                    >
-                      <Facebook size={16} />
-                      Watch on Facebook Instead
-                    </button>
+                {/* When stream not loaded: natural height so nothing clips on mobile */}
+                {!ytLoaded ? (
+                  <div className="rounded-xl overflow-hidden shadow-lg">
+                    <YouTubePlaceholder onLoad={() => setYtLoaded(true)} />
                   </div>
-                </div>
+                ) : (
+                  <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg bg-black">
+                    {/* Channel live embed — automatically shows the channel's current
+                        (or upcoming) live stream. If nothing is live, YouTube shows an
+                        unavailable notice, so we keep a direct fallback link below. */}
+                    <iframe
+                      src={`https://www.youtube.com/embed/live_stream?channel=${YOUTUBE_CHANNEL_ID}&autoplay=1`}
+                      className="absolute inset-0 w-full h-full"
+                      style={{ border: 'none' }}
+                      allowFullScreen
+                      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                      title="Victory Bible Baptist Church — Live on YouTube"
+                    />
+                  </div>
+                )}
+                {/* Always-visible fallback link once stream is loaded */}
+                {ytLoaded && (
+                  <div className="mt-3 text-center">
+                    <p className="text-gray-400 text-xs">
+                      Not live right now?{' '}
+                      <a
+                        href={YOUTUBE_CHANNEL_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#ff0000] hover:underline"
+                      >
+                        Watch recent services on YouTube →
+                      </a>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -238,7 +310,7 @@ export default function LivestreamPage() {
               Instagram
             </a>
             <a
-              href="https://youtube.com/YOUR_CHANNEL"
+              href={YOUTUBE_CHANNEL_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-[#ff0000] text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity"

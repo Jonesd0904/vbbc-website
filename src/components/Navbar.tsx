@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X, GraduationCap, ChevronDown } from 'lucide-react'
 
+const YOUTUBE_LIVE_URL = 'https://www.youtube.com/channel/UCdivEqKoP9dEaw6xyZmGsWw/live'
+
 type NavChild = { href: string; label: string; sub: string }
 type NavItem =
   | { type: 'link'; href: string; label: string }
@@ -118,6 +120,20 @@ export default function Navbar() {
               )
             )}
 
+            {/* Live Button - links straight to the YouTube live stream */}
+            <a
+              href={YOUTUBE_LIVE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-shine ml-2 flex items-center gap-2 font-cinzel text-sm bg-[#ff0000] text-white px-3.5 py-1.5 rounded-md hover:bg-[#d90000] transition-all duration-300 whitespace-nowrap"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+              </span>
+              LIVE
+            </a>
+
             {/* School Link - Highlighted */}
             <a
               href="https://www.victorybible.info/"
@@ -178,6 +194,23 @@ export default function Navbar() {
                 </div>
               )
             )}
+
+            {/* Live Button - Mobile */}
+            <div className="pt-3">
+              <a
+                href={YOUTUBE_LIVE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 font-cinzel text-white bg-[#ff0000] px-4 py-2 rounded-md hover:bg-[#d90000] transition-colors duration-300 w-fit"
+                onClick={() => setIsOpen(false)}
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                </span>
+                Watch LIVE
+              </a>
+            </div>
 
             {/* School Link - Mobile */}
             <div className="pt-3">
