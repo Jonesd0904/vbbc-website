@@ -176,39 +176,68 @@ export default function Home() {
       {/* What We Believe Preview */}
       <section className="section-padding bg-cream-dark">
         <div className="container-wide">
-          <div className="text-center mb-12 fade-in">
+          <div className="text-center mb-14 fade-in">
             <p className="font-lora italic text-gold mb-2">Our Foundation</p>
             <h2 className="font-cinzel text-3xl md:text-4xl text-navy mb-4">What We Believe</h2>
             <div className="w-16 h-1 bg-gold mx-auto"></div>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-10">
             {[
               {
                 icon: BookOpen,
+                image: '/images/home/belief-bible.jpg',
                 title: 'The Bible',
-                text: 'We believe the Bible is the inspired, infallible, and authoritative Word of God.',
+                text: 'We believe the Bible is the inspired, infallible, and authoritative Word of God, and that the King James Bible is the best translation for the English-speaking people.',
+                verse: 'Thy word is a lamp unto my feet, and a light unto my path.',
+                ref: 'Psalm 119:105',
               },
               {
                 icon: Heart,
+                image: '/images/home/belief-salvation.jpg',
                 title: 'Salvation',
                 text: 'We believe salvation is by grace alone through faith alone in Jesus Christ alone.',
+                verse: 'For by grace are ye saved through faith; and that not of yourselves: it is the gift of God.',
+                ref: 'Ephesians 2:8',
               },
               {
                 icon: Users,
+                image: '/images/home/belief-church.jpg',
                 title: 'The Church',
                 text: 'We believe the local church is an autonomous body of baptized believers.',
+                verse: 'Upon this rock I will build my church; and the gates of hell shall not prevail against it.',
+                ref: 'Matthew 16:18',
               },
             ].map((belief, index) => (
-              <div key={index} className="bg-white p-8 rounded-lg shadow-sm text-center fade-in">
-                <div className="w-16 h-16 bg-navy rounded-full flex items-center justify-center mx-auto mb-4">
-                  <belief.icon className="text-gold" size={28} />
+              <Link
+                key={index}
+                href="/beliefs"
+                className="group relative flex flex-col bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 fade-in"
+              >
+                <div className="relative h-52 overflow-hidden">
+                  <img
+                    src={belief.image}
+                    alt={belief.title}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy-dark/80 via-navy/30 to-transparent" />
                 </div>
-                <h3 className="font-cinzel text-xl text-navy mb-3">{belief.title}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{belief.text}</p>
-              </div>
+                <div className="relative flex-1 flex flex-col px-7 pt-12 pb-8 text-center">
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-navy ring-4 ring-white shadow-lg flex items-center justify-center transition-colors duration-500 group-hover:bg-gold">
+                    <belief.icon className="text-gold transition-colors duration-500 group-hover:text-navy" size={26} />
+                  </div>
+                  <h3 className="font-cinzel text-xl text-navy mb-3">{belief.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-5">{belief.text}</p>
+                  <div className="mt-auto pt-4 border-t border-gold/30">
+                    <p className="font-lora italic text-navy-light text-sm leading-relaxed">&ldquo;{belief.verse}&rdquo;</p>
+                    <p className="text-gold-dark text-xs font-semibold tracking-wider uppercase mt-2">{belief.ref}</p>
+                  </div>
+                </div>
+                <span className="absolute bottom-0 left-0 h-1 w-0 bg-gold transition-all duration-500 group-hover:w-full" />
+              </Link>
             ))}
           </div>
-          <div className="text-center mt-10 fade-in">
+          <div className="text-center mt-12 fade-in">
             <Link href="/beliefs" className="btn-primary inline-block">
               Full Statement of Faith
             </Link>
@@ -219,30 +248,42 @@ export default function Home() {
       {/* Ministries Preview */}
       <section className="section-padding bg-cream">
         <div className="container-wide">
-          <div className="text-center mb-12 fade-in">
+          <div className="text-center mb-14 fade-in">
             <p className="font-lora italic text-gold mb-2">Get Involved</p>
             <h2 className="font-cinzel text-3xl md:text-4xl text-navy mb-4">Our Ministries</h2>
             <div className="w-16 h-1 bg-gold mx-auto"></div>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Users, title: "Children's Ministry", desc: 'Building faith foundations' },
-              { icon: Users, title: 'Youth Ministry', desc: 'Equipping teens for Christ' },
-              { icon: BookOpen, title: 'Adult Bible Study', desc: 'Deep dives into God\'s Word' },
-              { icon: Music, title: 'Music Ministry', desc: 'Glorifying God in song' },
+              { icon: Users, image: '/images/home/ministry-children.jpg', title: "Children's Ministry", desc: 'Building faith foundations' },
+              { icon: Users, image: '/images/home/ministry-youth.jpg', title: 'Youth Ministry', desc: 'Equipping teens for Christ' },
+              { icon: BookOpen, image: '/images/home/ministry-adult-bible-study.jpg', title: 'Adult Bible Study', desc: "Deep dives into God's Word" },
+              { icon: Music, image: '/images/home/ministry-music.jpg', title: 'Music Ministry', desc: 'Glorifying God in song' },
             ].map((ministry, index) => (
-              <div key={index} className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 fade-in">
-                <div className="h-32 bg-gradient-to-br from-navy to-navy-light flex items-center justify-center">
-                  <ministry.icon className="text-gold" size={40} />
+              <Link
+                key={index}
+                href="/ministries"
+                className="group relative block h-80 rounded-xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 fade-in"
+              >
+                <img
+                  src={ministry.image}
+                  alt={ministry.title}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy-dark/95 via-navy/40 to-transparent transition-opacity duration-500" />
+                <div className="absolute top-4 left-4 w-12 h-12 rounded-full bg-navy/80 backdrop-blur-sm ring-2 ring-gold/70 flex items-center justify-center transition-colors duration-500 group-hover:bg-gold">
+                  <ministry.icon className="text-gold transition-colors duration-500 group-hover:text-navy" size={22} />
                 </div>
-                <div className="p-6 text-center">
-                  <h3 className="font-cinzel text-lg text-navy mb-2">{ministry.title}</h3>
-                  <p className="text-gray-500 text-sm">{ministry.desc}</p>
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
+                  <h3 className="font-cinzel text-xl text-white mb-1 drop-shadow">{ministry.title}</h3>
+                  <p className="font-lora italic text-cream/90 text-sm">{ministry.desc}</p>
+                  <div className="w-10 h-0.5 bg-gold mx-auto mt-3 transition-all duration-500 group-hover:w-24" />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
-          <div className="text-center mt-10 fade-in">
+          <div className="text-center mt-12 fade-in">
             <Link href="/ministries" className="btn-primary inline-block">
               Explore All Ministries
             </Link>
