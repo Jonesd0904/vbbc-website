@@ -6,7 +6,7 @@ import Link from 'next/link'
 const beliefs = [
   {
     title: 'The Bible',
-    content: 'We believe the Bible is the inspired, infallible, and authoritative Word of God. It is our sole guide for faith and practice. We believe that the King James Bible is the preserved Word of God for the English-speaking people.',
+    content: 'We believe the Bible is the inspired, infallible, and authoritative Word of God. It is our sole guide for faith and practice. We believe that the King James Bible is the best translation for the English-speaking people.',
     verse: '"All scripture is given by inspiration of God, and is profitable for doctrine, for reproof, for correction, for instruction in righteousness." — 2 Timothy 3:16',
   },
   {
