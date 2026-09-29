@@ -1,7 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MapPin, Phone, Clock, Send } from 'lucide-react'
+import { MapPin, Phone, Clock, Send, Mail } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+
+// Contact form messages are emailed via FormSubmit (formsubmit.co) and also
+// saved to the Supabase table `contact_messages` as a backup.
+// NOTE: FormSubmit sends a one-time activation email to this address on the
+// first submission - someone must click "Activate Form" in that email.
+const CONTACT_EMAIL = 'vbbc@att.net'
+const FORM_ENDPOINT = `https://formsubmit.co/ajax/${CONTACT_EMAIL}`
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -10,6 +18,8 @@ export default function ContactPage() {
     phone: '',
     message: '',
   })
+  const [honeypot, setHoneypot] = useState('')
+  const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
@@ -30,13 +40,56 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
+
+    // Spam bots fill the hidden field - pretend success, send nothing
+    if (honeypot) {
+      setSubmitted(true)
+      return
+    }
+
     setIsSubmitting(true)
-    
-    // For now, just simulate a submission
-    // You can integrate with Formspree, EmailJS, or your own API
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setSubmitted(true)
+    const { name, email, phone, message } = formData
+
+    const sendEmail = fetch(FORM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        phone: phone || '-',
+        message,
+        _subject: `New website message from ${name}`,
+        _replyto: email,
+        _template: 'table',
+        _captcha: 'false',
+      }),
+    }).then(async (res) => {
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data.success === false || data.success === 'false') {
+        throw new Error(data.message || 'Email could not be sent')
+      }
+    })
+
+    const saveToDb = supabase
+      ? supabase
+          .from('contact_messages')
+          .insert({ name, email, phone: phone || null, message })
+          .then(({ error }) => {
+            if (error) throw error
+          })
+      : Promise.reject(new Error('Supabase not configured'))
+
+    const [mailResult, dbResult] = await Promise.allSettled([sendEmail, saveToDb])
+    if (mailResult.status === 'rejected') console.error('[contact] email failed:', mailResult.reason)
+    if (dbResult.status === 'rejected') console.error('[contact] save failed:', dbResult.reason)
+
+    if (mailResult.status === 'rejected' && dbResult.status === 'rejected') {
+      setError(`Sorry, your message could not be sent. Please call us at (803) 781-6970 or email ${CONTACT_EMAIL}.`)
+    } else {
+      setSubmitted(true)
+      setFormData({ name: '', email: '', phone: '', message: '' })
+    }
     setIsSubmitting(false)
   }
 
@@ -80,7 +133,21 @@ export default function ContactPage() {
                   </div>
                   <div className="ml-4">
                     <h3 className="font-cinzel text-navy text-lg mb-1">Phone</h3>
-                    <p className="text-gray-600">(803) 781-6970</p>
+                    <p className="text-gray-600">
+                      <a href="tel:8037816970" className="hover:text-gold transition-colors">(803) 781-6970</a>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="w-12 h-12 bg-navy rounded-full flex items-center justify-center flex-shrink-0">
+                    <Mail className="text-gold" size={20} />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-cinzel text-navy text-lg mb-1">Email</h3>
+                    <p className="text-gray-600">
+                      <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-gold transition-colors">{CONTACT_EMAIL}</a>
+                    </p>
                   </div>
                 </div>
 
@@ -183,6 +250,24 @@ export default function ContactPage() {
                         placeholder="How can we help you?"
                       ></textarea>
                     </div>
+
+                    {/* Honeypot: hidden from people, bots fill it in */}
+                    <input
+                      type="text"
+                      name="_honey"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      aria-hidden="true"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                      className="hidden"
+                    />
+
+                    {error && (
+                      <p role="alert" className="text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm">
+                        {error}
+                      </p>
+                    )}
 
                     <button
                       type="submit"

@@ -49,8 +49,10 @@ import {
 } from '@/lib/content'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import RichTextEditor from '@/components/admin/RichTextEditor'
+import MessagesTab from '@/components/admin/MessagesTab'
+import { Mail as MailIcon } from 'lucide-react'
 
-type Tab = 'general' | 'services' | 'staff' | 'ministries' | 'scripture' | 'livestream' | 'giving' | 'images'
+type Tab = 'general' | 'services' | 'staff' | 'ministries' | 'scripture' | 'livestream' | 'giving' | 'images' | 'messages'
 
 // Simple password - in production, use proper authentication!
 const ADMIN_PASSWORD = 'vbbc2024'
@@ -656,6 +658,7 @@ export default function AdminDashboard() {
   const [passwordError, setPasswordError] = useState(false)
   
   const [activeTab, setActiveTab] = useState<Tab>('general')
+  const [unreadMessages, setUnreadMessages] = useState(0)
   const [content, setContent] = useState<Record<string, string>>(defaultContent)
   const [serviceTimes, setServiceTimes] = useState<ServiceTime[]>(defaultServiceTimes)
   const [staff, setStaff] = useState<StaffMember[]>(defaultStaff)
@@ -930,6 +933,7 @@ export default function AdminDashboard() {
   }
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: 'messages', label: 'Messages', icon: <MailIcon size={20} /> },
     { id: 'general', label: 'General Info', icon: <Church size={20} /> },
     { id: 'images', label: 'Images', icon: <ImageIcon size={20} /> },
     { id: 'services', label: 'Service Times', icon: <Clock size={20} /> },
@@ -1014,6 +1018,9 @@ export default function AdminDashboard() {
                 >
                   {tab.icon}
                   {tab.label}
+                  {tab.id === 'messages' && unreadMessages > 0 && (
+                    <span className="ml-auto text-xs bg-gold text-navy font-semibold px-2 py-0.5 rounded-full">{unreadMessages}</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -1422,6 +1429,11 @@ export default function AdminDashboard() {
                   )}
                 </div>
               )}
+
+              {/* Messages Tab (kept mounted so the unread badge stays current) */}
+              <div className={activeTab === 'messages' ? '' : 'hidden'}>
+                <MessagesTab adminPassword={ADMIN_PASSWORD} onUnreadChange={setUnreadMessages} />
+              </div>
 
               {/* Images Tab */}
               {activeTab === 'images' && (
