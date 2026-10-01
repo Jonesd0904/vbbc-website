@@ -128,10 +128,10 @@ export default function Home() {
                     loop
                     playsInline
                     preload="metadata"
-                    poster="/images/service-loop-poster.jpg"
+                    poster="/images/welcome-loop-poster.jpg"
                     aria-label="Worship service at Victory Bible Baptist Church"
                   >
-                    <source src="/videos/service-loop.mp4" type="video/mp4" />
+                    <source src="/videos/welcome-loop.mp4" type="video/mp4" />
                   </video>
                 </div>
               </div>
